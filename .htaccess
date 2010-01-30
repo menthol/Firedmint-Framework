@@ -8,7 +8,7 @@ Options +FollowSymLinks
 ErrorDocument 404 /index.php
 
 # Make a error output on any 500 errors.
-ErrorDocument 500 "<h1>Application Error</h1><p>The Firedmint application could not be launched.</p>"
+ErrorDocument 500 "<html><head><title>500 Application Error</title></head><body><h1>Application Error</h1><p>The Firedmint application could not be launched.</p></body></html>"
 
 # Set the default handler.
 DirectoryIndex index.php
