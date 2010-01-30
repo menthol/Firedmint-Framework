@@ -35,8 +35,8 @@ DirectoryIndex index.php
   RewriteRule ^(core/|vars/private/) - [F,L]
   RewriteRule ^site/[^\/]*/(extension/[^\/]*/)?(action|authentication|class|config|controller|data|forms|function|method|model|service|task|url|view)/ - [F,L]
   
-  # Only alow medias to be public on templates
-  RewriteRule ^site/[^\/]*/template/[^\/]*/medias/ - [S=1]
+  # Only alow public directories to be public on templates directories
+  RewriteRule ^site/[^\/]*/template/[^\/]*/public/ - [S=1]
   RewriteRule ^site/[^\/]*/template/[^\/]*/.{2,} - [F,L]
   
   
