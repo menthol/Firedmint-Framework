@@ -3,7 +3,7 @@
 // start Firedmint Framework
 @include 'firedmint.php';
 
-if (!defined(FM_SECURITY))
+if (!defined('FM_SECURITY'))
 {
 	if (!headers_sent())
 		header('HTTP/1.1 500 Internal Server Error');
