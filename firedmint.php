@@ -9,7 +9,7 @@ if (defined('FM_SECURITY'))
 
 @define('FM_SECURITY',true);
 
-@define('FM_START_TIME',microtime());
+@define('FM_START_TIME',microtime(true));
 
 // don't show errors
 error_reporting(0);
