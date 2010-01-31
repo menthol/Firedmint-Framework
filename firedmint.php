@@ -50,4 +50,39 @@ define('FM_PATH_VIEW',           'view/');
 // others constants
 define('FM_PHP_EXTENSION','.php');
 
+// define the firedmint class
+// the firedmint class alow to use 
+// Chained PHP
+class fm_chaine
+{
+	public $value;
+	
+	public function __construct($value = null)
+	{
+		$this->value = $value;
+	}
+	
+	public function __call($name, $arguments) {
+		if (function_exists($name))
+		{
+			array_unshift($arguments,$this->value);
 
+			$return = call_user_func_array($name,$arguments);
+			if ($return)
+				$this->value = $return;
+		}
+		//echo "Appel de la méthode '$name' ".implode(', ', $arguments). "\n";
+		return $this;
+	}
+}
+
+// primary firedmint function
+function fm($value = null)
+{
+	return new fm_chaine($value);
+}
+
+print fm('md5')->hash('cool')->value.'<br />'.md5('cool');
+
+
+print "<br /><br /><br /><br />".(microtime(1)-FM_START_TIME).' secondes';
