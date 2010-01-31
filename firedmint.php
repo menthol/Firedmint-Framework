@@ -16,10 +16,10 @@ error_reporting(0);
 ini_set('display_errors',0);
 
 // define default primary paths
-define('FM_PATH_VARS',           'vars/');
-define('FM_PATH_VARS_PRIVATE',   FM_PATH_VARS.'private/');
-define('FM_PATH_VARS_PUBLIC',    FM_PATH_VARS.'public/');
-define('FM_PATH_VARS_LOG',       FM_PATH_VARS.'logs/');
+define('FM_PATH_VAR',            'var/');
+define('FM_PATH_VAR_PRIVATE',    FM_PATH_VAR.'private/');
+define('FM_PATH_VAR_PUBLIC',     FM_PATH_VAR.'public/');
+define('FM_PATH_VAR_LOG',        FM_PATH_VAR.'log/');
 define('FM_PATH_CORE',           'core/');
 define('FM_PATH_SITE',           'site/');
 define('FM_PATH_SITE_ALL',       FM_PATH_SITE.'all/');
