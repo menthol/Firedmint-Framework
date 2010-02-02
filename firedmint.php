@@ -12,8 +12,8 @@ if (defined('FM_SECURITY'))
 @define('FM_START_TIME',microtime(true));
 
 // don't show errors
-error_reporting(0);
-ini_set('display_errors',0);
+error_reporting(E_ALL);
+ini_set('display_errors',1);
 
 // define default primary paths
 define('FM_PATH_VAR',            'var/');
@@ -51,3 +51,124 @@ define('FM_FILE_METHOD',         'method');
 // others constants
 define('FM_PHP_EXTENSION','.php');
 
+// boot function declaration
+function fm_getConfig()
+{
+	static $c = array();
+	
+	if (defined('FM_SITE_DIR'))
+	{
+		return $c;
+	}
+	
+	$o = array();
+	$u = array();
+	$tmp_host = explode('.',$_SERVER['SERVER_NAME']);
+	
+	if (count($tmp_host)==1)
+	{
+		$u['ext'] = null;
+		$u['sub'] = null;
+		$u['host'] = $tmp_host[0];
+	}
+	else
+	{
+		$u['ext'] = $tmp_host[(count($tmp_host)-1)];
+		$u['sub'] = implode('.',array_slice($tmp_host,0,(count($tmp_host)-2)));
+		$u['host'] = $tmp_host[(count($tmp_host)-2)];
+	}
+	
+	if ($_SERVER['SCRIPT_NAME'][0]=='/')
+	{
+		$tmp_dir = explode('/', substr($_SERVER['SCRIPT_NAME'],1));
+	}
+	else
+	{
+		$tmp_dir = explode('/', $_SERVER['SCRIPT_NAME']);
+	}
+	
+	array_pop($tmp_dir);
+	$u['dir'] = $tmp_dir;
+	$u['port'] = $_SERVER['SERVER_PORT'];
+	
+	do
+	{
+		$dir = (count($u['dir'])?'.':null).implode('.',$u['dir']);
+		
+		foreach (array('.'.$u['port'],'') as $port)
+		{
+			foreach (array($u['ext'],'') as $ext)
+			{
+				if (strlen($ext))
+					$ext = ".$ext";
+				
+				foreach (array($u['sub'],'') as $sub)
+				{
+					if (strlen($sub))
+						$sub = "$sub.";
+					$o[FM_PATH_SITE."{$sub}{$u['host']}{$ext}{$port}{$dir}/"] = FM_PATH_SITE."{$sub}{$u['host']}{$ext}{$port}{$dir}/";
+				}
+			}
+		}
+	
+	}while (array_pop($u['dir']));
+	
+	$u['dir'] = $tmp_dir;
+	do
+	{
+		$dir = implode('.',$u['dir']);
+		foreach (array($_SERVER['SERVER_PORT'],'') as $port)
+		{
+			if (strlen($port) && $dir)
+					$port = "$port.";
+			
+			if ($port || $dir)
+				$o[FM_PATH_SITE."{$port}{$dir}/"] = FM_PATH_SITE."{$port}{$dir}/";	
+		}
+	}while (array_pop($u['dir']));
+	
+	$o[FM_PATH_SITE_DEFAULT] = FM_PATH_SITE_DEFAULT;
+	
+	$c = array();
+	
+	foreach ($o as $dir)
+	{
+		$file = $dir.FM_FILE_CONFIG.FM_PHP_EXTENSION;
+		if (file_exists($file) && is_readable($file) && !defined('FM_SITE_DIR'))
+		{
+			define('FM_SITE_REAL_DIR',$dir);
+			include $file;
+			
+			if (defined('FM_SITE_DIR'))
+			{
+				$file = FM_SITE_DIR.FM_FILE_CONFIG.FM_PHP_EXTENSION;
+				if (file_exists($file) && is_readable($file))
+				{
+					$tmp_c = $c;
+					$c = array();
+					include $file;
+					
+					$c = array_merge($c,$tmp_c);
+				}
+			}
+			else
+			{
+				define('FM_SITE_DIR',FM_SITE_REAL_DIR);
+			}
+		}
+	}
+	
+	$file = FM_PATH_SITE_ALL.FM_FILE_CONFIG.FM_PHP_EXTENSION;
+	if (file_exists($file) && is_readable($file))
+	{
+		$tmp_c = $c;
+		$c = array();
+		include $file;
+		
+		$c = array_merge($c,$tmp_c);
+	}		
+	
+	
+	return $c;
+	
+}
