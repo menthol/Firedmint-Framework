@@ -25,20 +25,15 @@ define('FM_PATH_SITE',           'site/');
 define('FM_PATH_SITE_ALL',       FM_PATH_SITE.'all/');
 define('FM_PATH_SITE_DEFAULT',   FM_PATH_SITE.'default/');
 
-// define default secondary paths
+// define default secondary paths (directories)
 define('FM_PATH_ACTION',         'action/');
 define('FM_PATH_AUTH',           'auth/');
-define('FM_PATH_CLASS',          'class/');
-define('FM_PATH_CONFIG',         'config/');
 define('FM_PATH_CONTROLLER',     'controller/');
 define('FM_PATH_DATA',           'data/');
 define('FM_PATH_ELEMENT',        'element/');
 define('FM_PATH_EXTENSION',      'extension/');
 define('FM_PATH_FORMS',          'forms/');
-define('FM_PATH_FUCTION',        'function/');
-define('FM_PATH_L10N',           'l10n/');
 define('FM_PATH_LOG',            'log/');
-define('FM_PATH_METHOD',         'method/');
 define('FM_PATH_MODEL',          'model/');
 define('FM_PATH_PUBLIC',         'public/');
 define('FM_PATH_SERVICE',        'service/');
@@ -47,42 +42,12 @@ define('FM_PATH_TEMPLATE',       'template/');
 define('FM_PATH_URL',            'url/');
 define('FM_PATH_VIEW',           'view/');
 
+// define default secondary paths (files)
+define('FM_FILE_CONFIG',         'config');
+define('FM_FILE_FUNCTION',       'function');
+define('FM_FILE_L10N',           'l10n');
+define('FM_FILE_METHOD',         'method');
+
 // others constants
 define('FM_PHP_EXTENSION','.php');
 
-// define the firedmint class
-// the firedmint class alow to use 
-// Chained PHP
-class fm_chaine
-{
-	public $value;
-	
-	public function __construct($value = null)
-	{
-		$this->value = $value;
-	}
-	
-	public function __call($name, $arguments) {
-		if (function_exists($name))
-		{
-			array_unshift($arguments,$this->value);
-
-			$return = call_user_func_array($name,$arguments);
-			if ($return)
-				$this->value = $return;
-		}
-		//echo "Appel de la méthode '$name' ".implode(', ', $arguments). "\n";
-		return $this;
-	}
-}
-
-// primary firedmint function
-function fm($value = null)
-{
-	return new fm_chaine($value);
-}
-
-print fm('md5')->hash('cool')->value.'<br />'.md5('cool');
-
-
-print "<br /><br /><br /><br />".(microtime(1)-FM_START_TIME).' secondes';
