@@ -26,17 +26,16 @@ define('FM_PATH_SITE_ALL',       FM_PATH_SITE.'all/');
 define('FM_PATH_SITE_DEFAULT',   FM_PATH_SITE.'default/');
 
 // define default secondary paths (directories)
-define('FM_PATH_ACTION',         'action/');
 define('FM_PATH_AUTH',           'auth/');
+define('FM_PATH_CLASS',          'class/');
 define('FM_PATH_CONTROLLER',     'controller/');
-define('FM_PATH_DATA',           'data/');
+define('FM_PATH_DB',             'db/');
 define('FM_PATH_ELEMENT',        'element/');
 define('FM_PATH_EXTENSION',      'extension/');
-define('FM_PATH_FORMS',          'forms/');
+define('FM_PATH_FORM',           'form/');
 define('FM_PATH_LOG',            'log/');
 define('FM_PATH_MODEL',          'model/');
 define('FM_PATH_PUBLIC',         'public/');
-define('FM_PATH_SERVICE',        'service/');
 define('FM_PATH_TASK',           'task/');
 define('FM_PATH_TEMPLATE',       'template/');
 define('FM_PATH_URL',            'url/');
@@ -50,6 +49,10 @@ define('FM_FILE_METHOD',         'method');
 
 // others constants
 define('FM_PHP_EXTENSION','.php');
+
+print dirname(__FILE__);
+
+print_r(get_defined_constants());
 
 // boot function declaration
 function fm_getConfig()
@@ -165,10 +168,11 @@ function fm_getConfig()
 		$c = array();
 		include $file;
 		
-		$c = array_merge($c,$tmp_c);
+		$c = rawurlencode($c,$tmp_c);
 	}		
 	
 	
 	return $c;
 	
 }
+
