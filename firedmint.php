@@ -50,10 +50,6 @@ define('FM_FILE_METHOD',         'method');
 // others constants
 define('FM_PHP_EXTENSION','.php');
 
-print dirname(__FILE__);
-
-print_r(get_defined_constants());
-
 // boot function declaration
 function fm_getConfig()
 {
@@ -168,7 +164,7 @@ function fm_getConfig()
 		$c = array();
 		include $file;
 		
-		$c = rawurlencode($c,$tmp_c);
+		$c = array_merge($c,$tmp_c);
 	}		
 	
 	
