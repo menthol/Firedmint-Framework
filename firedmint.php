@@ -28,6 +28,7 @@ define('FM_PATH_SITE_DEFAULT',   FM_PATH_SITE.'default/');
 // define default secondary paths (directories)
 define('FM_PATH_AUTH',           'auth/');
 define('FM_PATH_CLASS',          'class/');
+define('FM_PATH_COMPONENT',      'component/');
 define('FM_PATH_CONTROLLER',     'controller/');
 define('FM_PATH_DB',             'db/');
 define('FM_PATH_ELEMENT',        'element/');
