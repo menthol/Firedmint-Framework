@@ -52,7 +52,7 @@ define('FM_FILE_METHOD',         'method');
 define('FM_PHP_EXTENSION','.php');
 
 // boot function declaration
-function fm_getConfig()
+function core_getConfig()
 {
 	static $c = array();
 	
