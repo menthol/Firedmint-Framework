@@ -44,7 +44,9 @@ define('FM_PATH_VIEW',           'view/');
 
 // define default secondary paths (files)
 define('FM_FILE_CONFIG',         'config');
+define('FM_FILE_EVENT',          'event');
 define('FM_FILE_FUNCTION',       'function');
+define('FM_FILE_HOOK',           'hook');
 define('FM_FILE_L10N',           'l10n');
 define('FM_FILE_METHOD',         'method');
 
@@ -52,14 +54,17 @@ define('FM_FILE_METHOD',         'method');
 define('FM_PHP_EXTENSION','.php');
 
 // boot function declaration
-function core_getConfig()
+/**
+ * Get all declared config
+ * 
+ * @return Array configuration table
+ */
+function core_getFullConfig()
 {
 	static $c = array();
 	
 	if (defined('FM_SITE_DIR'))
-	{
 		return $c;
-	}
 	
 	$o = array();
 	$u = array();
@@ -79,13 +84,9 @@ function core_getConfig()
 	}
 	
 	if ($_SERVER['SCRIPT_NAME'][0]=='/')
-	{
 		$tmp_dir = explode('/', substr($_SERVER['SCRIPT_NAME'],1));
-	}
 	else
-	{
 		$tmp_dir = explode('/', $_SERVER['SCRIPT_NAME']);
-	}
 	
 	array_pop($tmp_dir);
 	$u['dir'] = $tmp_dir;
@@ -106,7 +107,7 @@ function core_getConfig()
 				{
 					if (strlen($sub))
 						$sub = "$sub.";
-					$o[FM_PATH_SITE."{$sub}{$u['host']}{$ext}{$port}{$dir}/"] = FM_PATH_SITE."{$sub}{$u['host']}{$ext}{$port}{$dir}/";
+					$o[FM_PATH_SITE."{$sub}{$u['host']}{$ext}{$port}{$dir}"] = FM_PATH_SITE."{$sub}{$u['host']}{$ext}{$port}{$dir}";
 				}
 			}
 		}
@@ -123,37 +124,48 @@ function core_getConfig()
 					$port = "$port.";
 			
 			if ($port || $dir)
-				$o[FM_PATH_SITE."{$port}{$dir}/"] = FM_PATH_SITE."{$port}{$dir}/";	
+				$o[FM_PATH_SITE."{$port}{$dir}"] = FM_PATH_SITE."{$port}{$dir}";	
 		}
 	}while (array_pop($u['dir']));
 	
-	$o[FM_PATH_SITE_DEFAULT] = FM_PATH_SITE_DEFAULT;
+	$o[substr(FM_PATH_SITE_DEFAULT,0,-1)] = substr(FM_PATH_SITE_DEFAULT,0,-1);
 	
 	$c = array();
 	
 	foreach ($o as $dir)
 	{
-		$file = $dir.FM_FILE_CONFIG.FM_PHP_EXTENSION;
-		if (file_exists($file) && is_readable($file) && !defined('FM_SITE_DIR'))
+		if (!defined('FM_SITE_DIR'))
 		{
-			define('FM_SITE_REAL_DIR',$dir);
-			include $file;
-			
+			$file = $dir.FM_PHP_EXTENSION;
+			if (file_exists($file) && is_readable($file))
+			{
+				$tmp_c = $c;
+				$c = array();
+				include $file;
+				$c = array_replace_recursive($c,$tmp_c);
+			}
 			if (defined('FM_SITE_DIR'))
 			{
 				$file = FM_SITE_DIR.FM_FILE_CONFIG.FM_PHP_EXTENSION;
 				if (file_exists($file) && is_readable($file))
-				{
+				{				
 					$tmp_c = $c;
 					$c = array();
 					include $file;
-					
-					$c = array_merge($c,$tmp_c);
+					$c = array_replace_recursive($c,$tmp_c);
 				}
 			}
 			else
 			{
-				define('FM_SITE_DIR',FM_SITE_REAL_DIR);
+				$file = "$dir/".FM_FILE_CONFIG.FM_PHP_EXTENSION;
+				if (file_exists($file) && is_readable($file))
+				{
+					define('FM_SITE_DIR',"$dir/");
+					$tmp_c = $c;
+					$c = array();
+					include $file;
+					$c = array_replace_recursive($c,$tmp_c);
+				}
 			}
 		}
 	}
@@ -164,12 +176,42 @@ function core_getConfig()
 		$tmp_c = $c;
 		$c = array();
 		include $file;
-		
-		$c = array_merge($c,$tmp_c);
+		$c = array_replace_recursive($c,$tmp_c);
 	}		
-	
 	
 	return $c;
 	
 }
 
+// Some php compatibility function
+if (!function_exists('array_replace_recursive'))
+{
+	function array_replace_recursive() 
+	{ 
+	    $arrays = func_get_args(); 
+	
+	    $original = array_shift($arrays); 
+	
+	    foreach ($arrays as $array) 
+	    { 
+	        foreach ($array as $key => $value) 
+	        { 
+	            if (is_array($value)) 
+	            { 
+	                $original[$key] = array_replace_recursive($original[$key], $array[$key]); 
+	            } 
+	
+	            else 
+	            { 
+	                $original[$key] = $value; 
+	            } 
+	        } 
+	    } 
+	
+	    return $original; 
+	} 
+}
+
+
+// boot sequence
+$GLOBALS['fm']['config'] = core_getFullConfig();
