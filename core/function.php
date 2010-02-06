@@ -270,6 +270,16 @@ function core_method_loadConfig($fm)
 		$c = array();
 		include $file;
 		$c = array_replace_recursive($c,$tmp_c);
-	}		
+	}
+	
+	$file = FM_PATH_CORE.FM_FILE_CONFIG.FM_PHP_EXTENSION;
+	if (file_exists($file) && is_readable($file))
+	{
+		$tmp_c = $c;
+		$c = array();
+		include $file;
+		$c = array_replace_recursive($c,$tmp_c);
+	}
+	
 	$fm->core->config = $c;
 }
