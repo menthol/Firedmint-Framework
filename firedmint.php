@@ -57,4 +57,4 @@ require_once FM_PATH_CORE.FM_FILE_FUNCTION.FM_PHP_EXTENSION;
 require_once FM_PATH_CORE.FM_FILE_L10N.FM_PHP_EXTENSION;
 
 // boot sequence
-fm()->getConfig();
+fm()->loadConfig();
