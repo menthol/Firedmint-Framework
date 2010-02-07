@@ -32,7 +32,7 @@ DirectoryIndex index.php
   #RewriteBase /
 
   # Protect system files from being viewed
-  RewriteRule ^(core/|var/private/|var/log/) - [F,L]
+  RewriteRule ^(core/|var/private/|var/log/|public/private/) - [F,L]
   RewriteRule ^site/[^\/]*/(extension/[^\/]*/)?(auth|class|component|controller|db|element|form|log|model|task|url|view)/ - [F,L]
   
   # Only alow public directories to be public on templates directories

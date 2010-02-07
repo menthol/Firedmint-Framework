@@ -14,12 +14,16 @@ if (defined('FM_SECURITY'))
 // don't show errors
 error_reporting(E_ALL);
 ini_set('display_errors',1);
+ob_start();
 
 // define default primary paths
 define('FM_PATH_VAR',            'var/');
 define('FM_PATH_VAR_PRIVATE',    FM_PATH_VAR.'private/');
 define('FM_PATH_VAR_PUBLIC',     FM_PATH_VAR.'public/');
 define('FM_PATH_VAR_LOG',        FM_PATH_VAR.'log/');
+define('FM_PATH_STATIC',         'static/');
+define('FM_PATH_STATIC_PRIVATE', FM_PATH_STATIC.'private/');
+define('FM_PATH_STATIC_PUBLIC',  FM_PATH_STATIC.'public/');
 define('FM_PATH_CORE',           'core/');
 define('FM_PATH_SITE',           'site/');
 define('FM_PATH_SITE_ALL',       FM_PATH_SITE.'all/');
@@ -54,7 +58,6 @@ define('FM_PHP_EXTENSION','.php');
 // boot includes
 require_once FM_PATH_CORE.FM_FILE_COMPATIBILITY.FM_PHP_EXTENSION;
 require_once FM_PATH_CORE.FM_FILE_FUNCTION.FM_PHP_EXTENSION;
-require_once FM_PATH_CORE.FM_FILE_L10N.FM_PHP_EXTENSION;
 
 // boot sequence
 fm()->loadConfig();
