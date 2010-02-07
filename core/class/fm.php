@@ -3,7 +3,13 @@ if (!defined('FM_SECURITY')) die();
 
 function core_fm_method_construct($fm)
 {
-	fm()->loadConfig();
+	fm::$core
+		->loadConfig()
+		->include(FM_PATH_SITE_ALL.FM_FILE_FUNCTION.FM_PHP_EXTENSION)
+		->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.'fm'.FM_PHP_EXTENSION)
+		->include(FM_SITE_DIR.FM_FILE_FUNCTION.FM_PHP_EXTENSION)
+		->include(FM_SITE_DIR.FM_PATH_CLASS.'fm'.FM_PHP_EXTENSION)
+		->start();
 }
 
 /**

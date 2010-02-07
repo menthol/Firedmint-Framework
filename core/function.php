@@ -3,11 +3,9 @@ if (!defined('FM_SECURITY')) die();
 
 class fm
 {
-	public  $value;
 	public  $type;
 	public  static  $core;
 
-	
 	function __call($name, $arguments)
 	{
 		if (is_a(fm::$core,'fm') && !array_key_exists($this->type,fm::$core->function))
@@ -120,7 +118,7 @@ function fm($value = null, $type = 'fm')
 		fm::$core            = new fm();
 		fm::$core->function  = array();
 		fm::$core->extension = array();
-		fm::$core->inclusion = array();
+		fm::$core->inclusion = array(FM_PATH_CORE.FM_FILE_COMPATIBILITY.FM_PHP_EXTENSION=>true,FM_PATH_CORE.FM_FILE_FUNCTION.FM_PHP_EXTENSION=>true);
 		fm::$core->config    = array();
 		fm::$core->type      = 'fm';
 		fm::$core->event     = array();
@@ -141,11 +139,11 @@ function core_fm_method_new($fm, $type = 'fm', $value = null)
 	$fm->type = trim(strtolower($type));
 	fm::$core->include(FM_PATH_CORE.FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
 	fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
-	fm::$core->include(FM_PATH_SITE.FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
+	fm::$core->include(FM_SITE_DIR.FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
 	foreach(fm::$core->extension as $extension=>$data)
 	{
 		fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
-		fm::$core->include(FM_PATH_SITE.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
+		fm::$core->include(FM_SITE_DIR.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
 	}
 	
 	$fm->construct();

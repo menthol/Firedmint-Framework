@@ -59,5 +59,5 @@ define('FM_PHP_EXTENSION','.php');
 require_once FM_PATH_CORE.FM_FILE_COMPATIBILITY.FM_PHP_EXTENSION;
 require_once FM_PATH_CORE.FM_FILE_FUNCTION.FM_PHP_EXTENSION;
 
-// boot sequence
+// boot Firedmint
 fm();
