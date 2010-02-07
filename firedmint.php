@@ -14,7 +14,7 @@ if (defined('FM_SECURITY'))
 // don't show errors
 error_reporting(E_ALL);
 ini_set('display_errors',1);
-ob_start();
+//ob_start();
 
 // define default primary paths
 define('FM_PATH_VAR',            'var/');
@@ -60,4 +60,4 @@ require_once FM_PATH_CORE.FM_FILE_COMPATIBILITY.FM_PHP_EXTENSION;
 require_once FM_PATH_CORE.FM_FILE_FUNCTION.FM_PHP_EXTENSION;
 
 // boot sequence
-fm()->loadConfig();
+fm();

@@ -5,98 +5,83 @@ class fm
 {
 	public  $value;
 	public  $type;
-	public  $core;
-	public  $extension = array();
-	public  $property  = array();
-	public  $function  = array();
+	public  static  $core;
+
 	
 	function __call($name, $arguments)
 	{
-		if (strlen($this->type)==0)
-			$type = 'fm';
-		else
-			$type = $this->type;
-			
-		if (is_a($this->core,'fm') && !array_key_exists($type,$this->core->function))
-			$this->core->function[$type] = array();
+		if (is_a(fm::$core,'fm') && !array_key_exists($this->type,fm::$core->function))
+			fm::$core->function[$this->type] = array();
 		
-		if(is_a($this->core,'fm') && !array_key_exists($name,$this->core->function[$type]))
+		if(is_a(fm::$core,'fm') && !array_key_exists($name,fm::$core->function[$this->type]))
 		{
 			// find the good function 
 			$function_prefix = array();
 			$function_prefix[] = "site";
 			$function_prefix[] = "all";
-			foreach ($this->core->extension as $extension)
-			{
-				$function_prefix[] = "{$extension}";
-			}
+			foreach (fm::$core->extension as $extension=>$data)
+				$function_prefix[] = $extension;
+			
 			$function_prefix[] = "core";
 			
-			if (strlen($this->type)==0)
+			foreach ($function_prefix as $prefix)
 			{
-				foreach ($function_prefix as $prefix)
-				{
-					if (!array_key_exists($name,$this->core->function[$type]))
-						if (function_exists("{$prefix}_{$this->type}_method_{$name}") || function_exists("{$prefix}_{$this->type}_function_{$name}"))
-							$this->core->function[$type][$name] = "{$prefix}_{$this->type}";
-				}
+				if (!array_key_exists($name,fm::$core->function[$this->type]))
+					if (function_exists("{$prefix}_{$this->type}_method_{$name}") || function_exists("{$prefix}_{$this->type}_function_{$name}"))
+						fm::$core->function[$this->type][$name] = "{$prefix}_{$this->type}";
 			}
-			
-			if (!array_key_exists($name,$this->core->function[$type]))
+			if (!array_key_exists($name,fm::$core->function[$this->type]))
 			{
 				foreach ($function_prefix as $prefix)
 				{
-					if (!array_key_exists($name,$this->core->function[$type]))
+					if (!array_key_exists($name,fm::$core->function[$this->type]))
 						if (function_exists("{$prefix}_method_{$name}") || function_exists("{$prefix}_function_{$name}"))
-							$this->core->function[$type][$name] = "{$prefix}";
+							fm::$core->function[$this->type][$name] = "{$prefix}";
 				}
 			}
 			
-			if (!array_key_exists($name,$this->core->function[$type]) && function_exists($name))
-				$this->core->function[$type][$name] = null; // set array_key_exist to true and strlen to 0
+			if (!array_key_exists($name,fm::$core->function[$this->type]) && function_exists($name))
+				fm::$core->function[$this->type][$name] = null; // set array_key_exist to true and strlen to 0
 		}
 		
-		$return = clone $this;
+		// do not clone the object on event
+		$return = $this;
 		
-		// event trigger _before
+		// event trigger before and main
+		if ($name!='event')
+		{
+			$return = clone $this;
+			$return->event("{$this->type}_{$name}",'before');
+			$return->event("{$this->type}_{$name}",'main');
+		}
 		
 		// function lancher
-		if (is_a($this->core,'fm') && array_key_exists($name,$this->core->function[$type]))
+		if (is_a(fm::$core,'fm') && array_key_exists($name,fm::$core->function[$this->type]))
 		{
-			
-			if (strlen($this->core->function[$type][$name])>0)
+			if (strlen(fm::$core->function[$this->type][$name])>0)
 			{
-				if (function_exists("{$this->core->function[$type][$name]}_method_$name"))
+				if (function_exists(fm::$core->function[$this->type][$name]."_method_$name"))
 				{
-					array_unshift($arguments,clone $return);
-					
-					$tmp_return = call_user_func_array("{$this->core->function[$type][$name]}_method_$name",$arguments);
+					array_unshift($arguments,&$return);
+					$tmp_return = call_user_func_array(fm::$core->function[$this->type][$name]."_method_$name",$arguments);
 					
 					if (!(is_a($tmp_return,'fm')))
 					{
 						if (is_null($tmp_return))
 							$return = $arguments[0];
 						else
-						{
-							$out = clone $return;
-							$out->value = $tmp_return;
-							$return = $out;
-						}
+							$return->value = $tmp_return;
 					}
 					else
 						$return = $tmp_return;
 				}
-				elseif (function_exists("{$this->core->function[$type][$name]}_function_$name"))
+				elseif (function_exists(fm::$core->function[$this->type][$name]."_function_$name"))
 				{
 					array_unshift($arguments,$return->value);
-					$tmp_return = call_user_func_array("{$this->core->function[$type][$name]}_function_$name",$arguments);
+					$tmp_return = call_user_func_array(fm::$core->function[$this->type][$name]."_function_$name",$arguments);
 					
 					if (!(is_a($tmp_return,'fm')))
-					{
-						$out = clone $return;
-						$out->value = $tmp_return;
-						$return = $out;
-					}
+						$return->value = $tmp_return;
 					else
 						$return = $tmp_return;
 				}
@@ -108,21 +93,17 @@ class fm
 				$tmp_return = call_user_func_array($name,$arguments);
 				
 				if (!(is_a($tmp_return,'fm')))
-				{
-					$out = clone $return;
-					$out->value = $tmp_return;
-					$return = $out;
-				}
+					$return->value = $tmp_return;
 				else		
 					$return = $tmp_return;
 			}
 		}
 		
-		// event trigger_after
-		
+		// event trigger after
+		if ($name!='event')
+			$return->event("{$this->type}_{$name}",'after');
 		
 		// return
-		
 		return $return;	
 	}
 	
@@ -132,154 +113,58 @@ class fm
 	}
 }
 
-function fm($value = null, $type = null)
+function fm($value = null, $type = 'fm')
 {
-	static $fm;
-	if (!is_object($fm))
+	if (!is_object(fm::$core))
 	{
-		$fm = new fm();
-		$fm->core = $fm;
+		fm::$core            = new fm();
+		fm::$core->function  = array();
+		fm::$core->extension = array();
+		fm::$core->inclusion = array();
+		fm::$core->config    = array();
+		fm::$core->type      = 'fm';
+		fm::$core->event     = array();
+		fm::$core->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$core->type.FM_PHP_EXTENSION);
+		fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$core->type.FM_PHP_EXTENSION);
+		fm::$core->construct();
 	}
-	return $fm->new($value,$type);
+	
+	if($value==null && $type == 'fm')
+		return fm::$core;
+	
+	return fm::$core->new($type,$value);
 }
 
-function core_method_new($fm,$value,$type)
+function core_fm_method_new($fm, $type = 'fm', $value = null)
 {
 	$fm->value = $value;
 	$fm->type = trim(strtolower($type));
+	fm::$core->include(FM_PATH_CORE.FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
+	fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
+	fm::$core->include(FM_PATH_SITE.FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
+	foreach(fm::$core->extension as $extension=>$data)
+	{
+		fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
+		fm::$core->include(FM_PATH_SITE.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
+	}
+	
+	$fm->construct();
 }
 
-/**
- * Load all declared config
- * 
- * @return Array configuration table
- */
-function core_method_loadConfig($fm)
+function core_fm_method_include($fm,$file)
 {
-	if (defined('FM_SITE_DIR'))
-		return $fm;
-	
-	$o = array();
-	$u = array();
-	$tmp_host = explode('.',$_SERVER['SERVER_NAME']);
-	
-	if (count($tmp_host)==1)
+	$file = trim($file);
+	if (!array_key_exists($file,fm::$core->inclusion))
 	{
-		$u['ext'] = null;
-		$u['sub'] = null;
-		$u['host'] = $tmp_host[0];
-	}
-	else
-	{
-		$u['ext'] = $tmp_host[(count($tmp_host)-1)];
-		$u['sub'] = implode('.',array_slice($tmp_host,0,(count($tmp_host)-2)));
-		$u['host'] = $tmp_host[(count($tmp_host)-2)];
-	}
-	
-	if ($_SERVER['SCRIPT_NAME'][0]=='/')
-		$tmp_dir = explode('/', substr($_SERVER['SCRIPT_NAME'],1));
-	else
-		$tmp_dir = explode('/', $_SERVER['SCRIPT_NAME']);
-	
-	array_pop($tmp_dir);
-	$u['dir'] = $tmp_dir;
-	$u['port'] = $_SERVER['SERVER_PORT'];
-	
-	do
-	{
-		$dir = (count($u['dir'])?'.':null).implode('.',$u['dir']);
-		
-		foreach (array('.'.$u['port'],'') as $port)
+		fm::$core->inclusion[$file]=null;
+		if (file_exists($file))
 		{
-			foreach (array($u['ext'],'') as $ext)
-			{
-				if (strlen($ext))
-					$ext = ".$ext";
-				
-				foreach (array($u['sub'],'') as $sub)
-				{
-					if (strlen($sub))
-						$sub = "$sub.";
-					$o[FM_PATH_SITE."{$sub}{$u['host']}{$ext}{$port}{$dir}"] = FM_PATH_SITE."{$sub}{$u['host']}{$ext}{$port}{$dir}";
-				}
-			}
-		}
-	
-	}while (array_pop($u['dir']));
-	
-	$u['dir'] = $tmp_dir;
-	do
-	{
-		$dir = implode('.',$u['dir']);
-		foreach (array($_SERVER['SERVER_PORT'],'') as $port)
-		{
-			if (strlen($port) && $dir)
-					$port = "$port.";
-			
-			if ($port || $dir)
-				$o[FM_PATH_SITE."{$port}{$dir}"] = FM_PATH_SITE."{$port}{$dir}";	
-		}
-	}while (array_pop($u['dir']));
-	
-	$o[substr(FM_PATH_SITE_DEFAULT,0,-1)] = substr(FM_PATH_SITE_DEFAULT,0,-1);
-	
-	$c = array();
-	
-	foreach ($o as $dir)
-	{
-		if (!defined('FM_SITE_DIR'))
-		{
-			$file = $dir.FM_PHP_EXTENSION;
-			if (file_exists($file) && is_readable($file))
-			{
-				$tmp_c = $c;
-				$c = array();
-				include $file;
-				$c = array_replace_recursive($c,$tmp_c);
-			}
-			if (defined('FM_SITE_DIR'))
-			{
-				$file = FM_SITE_DIR.FM_FILE_CONFIG.FM_PHP_EXTENSION;
-				if (file_exists($file) && is_readable($file))
-				{				
-					$tmp_c = $c;
-					$c = array();
-					include $file;
-					$c = array_replace_recursive($c,$tmp_c);
-				}
-			}
-			else
-			{
-				$file = "$dir/".FM_FILE_CONFIG.FM_PHP_EXTENSION;
-				if (file_exists($file) && is_readable($file))
-				{
-					define('FM_SITE_DIR',"$dir/");
-					$tmp_c = $c;
-					$c = array();
-					include $file;
-					$c = array_replace_recursive($c,$tmp_c);
-				}
-			}
+			$tmp_f = get_defined_functions();
+			include $file;
+			fm::$core->inclusion[$file]=true;
+			$tmp_f2 = get_defined_functions();
+			if (count($tmp_f['user'])!=count($tmp_f2['user']))
+				fm::$core->function = array();
 		}
 	}
-	
-	$file = FM_PATH_SITE_ALL.FM_FILE_CONFIG.FM_PHP_EXTENSION;
-	if (file_exists($file) && is_readable($file))
-	{
-		$tmp_c = $c;
-		$c = array();
-		include $file;
-		$c = array_replace_recursive($c,$tmp_c);
-	}
-	
-	$file = FM_PATH_CORE.FM_FILE_CONFIG.FM_PHP_EXTENSION;
-	if (file_exists($file) && is_readable($file))
-	{
-		$tmp_c = $c;
-		$c = array();
-		include $file;
-		$c = array_replace_recursive($c,$tmp_c);
-	}
-	
-	$fm->core->config = $c;
 }
