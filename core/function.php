@@ -5,6 +5,7 @@ class fm
 {
 	public  $type;
 	public  static  $core;
+	public  static  $stdObj;
 
 	function __call($name, $arguments)
 	{
@@ -105,11 +106,13 @@ function fm($value = null, $type = 'fm')
 	if (!is_object(fm::$core))
 	{
 		fm::$core            = new fm();
+		fm::$core->type      = 'fm';
+		fm::$stdObj          = clone fm::$core;
+		fm::$stdObj->value   = null;
 		fm::$core->function  = array();
 		fm::$core->extension = array();
 		fm::$core->inclusion = array(FM_PATH_CORE.FM_FILE_COMPATIBILITY.FM_PHP_EXTENSION=>true,FM_PATH_CORE.FM_FILE_FUNCTION.FM_PHP_EXTENSION=>true);
 		fm::$core->config    = array();
-		fm::$core->type      = 'fm';
 		fm::$core->event     = array();
 		fm::$core->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$core->type.FM_PHP_EXTENSION);
 		fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$core->type.FM_PHP_EXTENSION);
@@ -124,7 +127,24 @@ function fm($value = null, $type = 'fm')
 
 function core_fm_method_class($fm, $type = 'fm', $value = null)
 {
-	$return = clone $fm;
+	$return = clone fm::$stdObj;
+	$return->value = $value;
+	$return->type = trim(strtolower($type));
+	fm::$core->include(FM_PATH_CORE.FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
+	fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
+	fm::$core->include(FM_SITE_DIR.FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
+	foreach(fm::$core->extension as $extension=>$data)
+	{
+		fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
+		fm::$core->include(FM_SITE_DIR.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
+	}
+	
+	return $return->construct(); 
+}
+
+function core_fm_method_extension($fm, $type = 'fm', $value = null)
+{
+	$return = clone fm::$stdObj;
 	$return->value = $value;
 	$return->type = trim(strtolower($type));
 	fm::$core->include(FM_PATH_CORE.FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
