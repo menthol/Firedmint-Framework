@@ -25,7 +25,7 @@ class fm
 			foreach ($function_prefix as $prefix)
 			{
 				if (!array_key_exists($name,fm::$core->function[$this->type]))
-					if (function_exists("{$prefix}_{$this->type}_method_{$name}") || function_exists("{$prefix}_{$this->type}_function_{$name}"))
+					if (function_exists("{$prefix}_{$this->type}_method_{$name}"))
 						fm::$core->function[$this->type][$name] = "{$prefix}_{$this->type}";
 			}
 			if (!array_key_exists($name,fm::$core->function[$this->type]))
@@ -33,7 +33,7 @@ class fm
 				foreach ($function_prefix as $prefix)
 				{
 					if (!array_key_exists($name,fm::$core->function[$this->type]))
-						if (function_exists("{$prefix}_method_{$name}") || function_exists("{$prefix}_function_{$name}"))
+						if (function_exists("{$prefix}_method_{$name}"))
 							fm::$core->function[$this->type][$name] = "{$prefix}";
 				}
 			}
@@ -48,9 +48,10 @@ class fm
 		// event trigger before and main
 		if ($name!='event')
 		{
-			$return = clone $this;
-			$return->event("{$this->type}_{$name}",'before');
-			$return->event("{$this->type}_{$name}",'main');
+			$return
+				->event("{$this->type}_{$name}",'before')
+				->event("{$this->type}_{$name}",'main')
+				->save($return);
 		}
 		
 		// function lancher
@@ -65,23 +66,11 @@ class fm
 					
 					if (!(is_a($tmp_return,'fm')))
 					{
-						if (is_null($tmp_return))
-							$return = $arguments[0];
-						else
+						if (!is_null($tmp_return))
 							$return->value = $tmp_return;
 					}
 					else
-						$return = $tmp_return;
-				}
-				elseif (function_exists(fm::$core->function[$this->type][$name]."_function_$name"))
-				{
-					array_unshift($arguments,$return->value);
-					$tmp_return = call_user_func_array(fm::$core->function[$this->type][$name]."_function_$name",$arguments);
-					
-					if (!(is_a($tmp_return,'fm')))
-						$return->value = $tmp_return;
-					else
-						$return = $tmp_return;
+						$return = clone $tmp_return;
 				}
 			}
 			elseif (function_exists($name))
@@ -93,13 +82,13 @@ class fm
 				if (!(is_a($tmp_return,'fm')))
 					$return->value = $tmp_return;
 				else		
-					$return = $tmp_return;
+					$return = clone $tmp_return;
 			}
 		}
 		
 		// event trigger after
 		if ($name!='event')
-			$return->event("{$this->type}_{$name}",'after');
+			$return->event("{$this->type}_{$name}",'after')->save($return);
 		
 		// return
 		return $return;	
@@ -130,10 +119,10 @@ function fm($value = null, $type = 'fm')
 	if($value==null && $type == 'fm')
 		return fm::$core;
 	
-	return fm::$core->new($type,$value);
+	return fm::$core->helper($type,$value);
 }
 
-function core_fm_method_new($fm, $type = 'fm', $value = null)
+function core_fm_method_helper($fm, $type = 'fm', $value = null)
 {
 	$fm->value = $value;
 	$fm->type = trim(strtolower($type));
