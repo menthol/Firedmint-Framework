@@ -8,7 +8,9 @@ function core_fm_method_construct($fm)
 		->include(FM_PATH_SITE_ALL.FM_FILE_FUNCTION.FM_PHP_EXTENSION)
 		->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.'fm'.FM_PHP_EXTENSION)
 		->include(FM_SITE_DIR.FM_FILE_FUNCTION.FM_PHP_EXTENSION)
-		->include(FM_SITE_DIR.FM_PATH_CLASS.'fm'.FM_PHP_EXTENSION)
+		->include(FM_SITE_DIR.FM_PATH_CLASS.'fm'.FM_PHP_EXTENSION);
+	fm::$core
+		->class('site')
 		->start();
 }
 
@@ -20,7 +22,7 @@ function core_fm_method_construct($fm)
 function core_fm_method_loadConfig($fm)
 {
 	if (defined('FM_SITE_DIR'))
-		return $fm;
+		return;
 	
 	$o = array();
 	$u = array();
@@ -190,7 +192,15 @@ function core_method_event($fm,$event,$event_part=null)
 								$is_find = true;
 								array_unshift($arguments,$event);
 								array_unshift($arguments,&$fm);
-								call_user_func_array("{$prefix}_event_callback_{$callback}",$arguments);
+								$tmp_return = call_user_func_array("{$prefix}_event_callback_{$callback}",$arguments);
+					
+								if (!(is_a($tmp_return,'fm')))
+								{
+									if (!is_null($tmp_return))
+										$fm->value = $tmp_return;
+								}
+								else
+									$fm = $tmp_return;
 							}
 						}
 					}
@@ -198,4 +208,6 @@ function core_method_event($fm,$event,$event_part=null)
 			}
 		}
 	}
+	
+	return $fm;
 }

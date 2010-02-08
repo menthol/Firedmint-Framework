@@ -70,7 +70,7 @@ class fm
 							$return->value = $tmp_return;
 					}
 					else
-						$return = clone $tmp_return;
+						$return = $tmp_return;
 				}
 			}
 			elseif (function_exists($name))
@@ -82,7 +82,7 @@ class fm
 				if (!(is_a($tmp_return,'fm')))
 					$return->value = $tmp_return;
 				else		
-					$return = clone $tmp_return;
+					$return = $tmp_return;
 			}
 		}
 		
@@ -119,23 +119,24 @@ function fm($value = null, $type = 'fm')
 	if($value==null && $type == 'fm')
 		return fm::$core;
 	
-	return fm::$core->helper($type,$value);
+	return fm::$core->class($type,$value);
 }
 
-function core_fm_method_helper($fm, $type = 'fm', $value = null)
+function core_fm_method_class($fm, $type = 'fm', $value = null)
 {
-	$fm->value = $value;
-	$fm->type = trim(strtolower($type));
-	fm::$core->include(FM_PATH_CORE.FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
-	fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
-	fm::$core->include(FM_SITE_DIR.FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
+	$return = clone $fm;
+	$return->value = $value;
+	$return->type = trim(strtolower($type));
+	fm::$core->include(FM_PATH_CORE.FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
+	fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
+	fm::$core->include(FM_SITE_DIR.FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
 	foreach(fm::$core->extension as $extension=>$data)
 	{
-		fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
-		fm::$core->include(FM_SITE_DIR.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.$fm->type.FM_PHP_EXTENSION);
+		fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
+		fm::$core->include(FM_SITE_DIR.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
 	}
 	
-	$fm->construct();
+	return $return->construct(); 
 }
 
 function core_fm_method_include($fm,$file)
