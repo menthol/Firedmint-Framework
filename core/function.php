@@ -277,7 +277,7 @@ function core_method_extension($fm, $extension)
 			}
 
 						
-			fm::$core->extension[$extension] = array();
+			fm::$core->extension[$extension] = array('path'=>$path);
 			$obj = clone fm::$stdObj;
 			$obj->type = $extension;
 			$obj->classBoot();
