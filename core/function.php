@@ -226,11 +226,9 @@ function core_method_class($fm, $class = 'fm')
 			->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$core->class[$class]['object']->type.FM_PHP_EXTENSION)
 			->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$core->class[$class]['object']->type.FM_PHP_EXTENSION)
 			->include(FM_SITE_DIR.FM_PATH_CLASS.fm::$core->class[$class]['object']->type.FM_PHP_EXTENSION);
-		foreach(fm::$core->extension as $extension=>$data)
+		foreach(fm::$core->extension as $data)
 		{
-			fm::$core
-				->include(FM_PATH_SITE_ALL.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.fm::$core->class[$class]['object']->type.FM_PHP_EXTENSION)
-				->include(FM_SITE_DIR.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.fm::$core->class[$class]['object']->type.FM_PHP_EXTENSION);		
+			fm::$core->include($data['path'].FM_PATH_CLASS.fm::$core->class[$class]['object']->type.FM_PHP_EXTENSION);
 		}
 		fm::$core->class[$class]['object']->classBoot();
 		$fm->message("Class $class Loaded",$class);
@@ -254,15 +252,21 @@ function core_method_extension($fm, $extension)
 				->include(FM_PATH_CORE.FM_PATH_CLASS.$extension.FM_PHP_EXTENSION)
 				->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.$extension.FM_PHP_EXTENSION)
 				->include(FM_SITE_DIR.FM_PATH_CLASS.$extension.FM_PHP_EXTENSION);
-			foreach(fm::$core->extension as $data)
-			{
-				fm::$core->include($data['path'].FM_PATH_CLASS.$extension.FM_PHP_EXTENSION);
-			}
-			
+						
 			if (file_exists(FM_SITE_DIR.FM_PATH_EXTENSION."$extension/"))
 				$path = FM_SITE_DIR.FM_PATH_EXTENSION."$extension/";
 			else
 				$path = FM_PATH_SITE_ALL.FM_PATH_EXTENSION."$extension/";
+			
+			foreach(fm::$core->extension as $data)
+			{
+				fm::$core->include($data['path'].FM_PATH_CLASS.$extension.FM_PHP_EXTENSION);
+			}
+				
+			foreach(fm::$core->class as $class=>$data)
+			{
+				fm::$core->include($path.FM_PATH_CLASS.$class.FM_PHP_EXTENSION);
+			}
 			
 			fm::$core
 				->include($path.FM_PATH_CLASS.$extension.FM_PHP_EXTENSION)
