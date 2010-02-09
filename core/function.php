@@ -85,6 +85,13 @@ class fm
 				else		
 					$return = $tmp_return;
 			}
+		} else
+		{
+			fm::$core->message['notice'][] = array(
+				'message' => "function {$this->type}_{$name} not found",
+				'date'    => microtime(true),
+				'args'    => array('type'=>$this->type,'name'=>$name,),
+			);
 		}
 		
 		// event trigger after
@@ -98,6 +105,7 @@ class fm
 	function save(&$var)
 	{
 		$var = $this;
+		return $this;
 	}
 }
 
@@ -106,60 +114,195 @@ function fm($value = null, $type = 'fm')
 	if (!is_object(fm::$core))
 	{
 		fm::$core            = new fm();
-		fm::$core->type      = 'fm';
 		fm::$stdObj          = clone fm::$core;
 		fm::$stdObj->value   = null;
-		fm::$core->function  = array();
-		fm::$core->extension = array();
-		fm::$core->inclusion = array(FM_PATH_CORE.FM_FILE_COMPATIBILITY.FM_PHP_EXTENSION=>true,FM_PATH_CORE.FM_FILE_FUNCTION.FM_PHP_EXTENSION=>true);
+		fm::$stdObj->type    = 'fm';
+		fm::$core->class     = array('fm'=>array('class'=>fm::$stdObj));
 		fm::$core->config    = array();
+		fm::$core->extension = array();
 		fm::$core->event     = array();
-		fm::$core->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$core->type.FM_PHP_EXTENSION);
-		fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$core->type.FM_PHP_EXTENSION);
-		fm::$core->construct();
-	}
-	
+		fm::$core->function  = array();
+		fm::$core->inclusion = array(FM_PATH_CORE.FM_FILE_COMPATIBILITY.FM_PHP_EXTENSION=>true,FM_PATH_CORE.FM_FILE_FUNCTION.FM_PHP_EXTENSION=>true);
+		fm::$core->message   = array('message'=>array(),'debug'=>array(),'notice'=>array(),'error'=>array());
+		fm::$core->type      = 'core';
+		set_error_handler("fm_ErrorHandler");
+		fm::$core
+			->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$core->type.FM_PHP_EXTENSION)
+			->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$core->type.FM_PHP_EXTENSION)
+			->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$stdObj->type.FM_PHP_EXTENSION)
+			->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$stdObj->type.FM_PHP_EXTENSION)
+			->classConstruct()
+			->classStart();
+	} 
+
 	if($value==null && $type == 'fm')
 		return fm::$core;
 	
 	return fm::$core->class($type,$value);
 }
 
-function core_fm_method_class($fm, $type = 'fm', $value = null)
+function core_method_message($fm,$message)
 {
-	$return = clone fm::$stdObj;
-	$return->value = $value;
-	$return->type = trim(strtolower($type));
-	fm::$core->include(FM_PATH_CORE.FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
-	fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
-	fm::$core->include(FM_SITE_DIR.FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
-	foreach(fm::$core->extension as $extension=>$data)
-	{
-		fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
-		fm::$core->include(FM_SITE_DIR.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
-	}
-	
-	return $return->construct(); 
+	$args = func_get_args();
+	array_shift($args);
+	array_shift($args);
+	fm::$core->message['message'][] = array(
+		'message' => $message,
+		'date'    => microtime(true),
+		'args'    => $args,
+	);
 }
 
-function core_fm_method_extension($fm, $type = 'fm', $value = null)
+function core_method_debug($fm,$message)
 {
-	$return = clone fm::$stdObj;
-	$return->value = $value;
-	$return->type = trim(strtolower($type));
-	fm::$core->include(FM_PATH_CORE.FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
-	fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
-	fm::$core->include(FM_SITE_DIR.FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
-	foreach(fm::$core->extension as $extension=>$data)
-	{
-		fm::$core->include(FM_PATH_SITE_ALL.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
-		fm::$core->include(FM_SITE_DIR.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.$return->type.FM_PHP_EXTENSION);
-	}
-	
-	return $return->construct(); 
+	$args = func_get_args();
+	array_shift($args);
+	array_shift($args);
+	fm::$core->message['debug'][] = array(
+		'message' => $message,
+		'date'    => microtime(true),
+		'args'    => $args,
+	);
 }
 
-function core_fm_method_include($fm,$file)
+function core_method_notice($fm,$message)
+{
+	$args = func_get_args();
+	array_shift($args);
+	array_shift($args);
+	fm::$core->message['notice'][] = array(
+		'message' => $message,
+		'date'    => microtime(true),
+		'args'    => $args,
+	);
+}
+
+function core_method_error($fm,$message)
+{
+	$args = func_get_args();
+	array_shift($args);
+	array_shift($args);
+	fm::$core->message['error'][] = array(
+		'message' => $message,
+		'date'    => microtime(true),
+		'args'    => $args,
+	);
+}
+
+function fm_ErrorHandler($errno, $errstr, $errfile, $errline) {
+	switch ($errno) {
+		case E_ERROR:
+		case E_USER_ERROR:
+				$errors = "Fatal Error";
+				fm::$core->error($errstr,array('no'=>$errno,'type'=>$error,'file'=>$errfile,'line'=> $errline));
+				return false;
+			break;
+		case E_NOTICE:
+		case E_USER_NOTICE:
+				$errors = "Notice";
+			break;
+		case E_WARNING:
+		case E_USER_WARNING:
+				$errors = "Warning";
+			break;
+
+		default:
+				$errors = "Unknown";
+		break;
+	}
+	
+	fm::$core->notice($errstr,array('no'=>$errno,'type'=>$errors,'file'=>$errfile,'line'=> $errline));
+	return false;
+}
+
+function core_method_class($fm, $class = 'fm')
+{
+	if (!array_key_exists($class,fm::$core->class))
+	{
+		$fm->message("Loading class $class ",$class);
+		fm::$core->class[$class]['object'] = clone fm::$stdObj;
+		fm::$core->class[$class]['object']->type = trim(strtolower($class));
+		fm::$core
+			->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$core->class[$class]['object']->type.FM_PHP_EXTENSION)
+			->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$core->class[$class]['object']->type.FM_PHP_EXTENSION)
+			->include(FM_SITE_DIR.FM_PATH_CLASS.fm::$core->class[$class]['object']->type.FM_PHP_EXTENSION);
+		foreach(fm::$core->extension as $extension=>$data)
+		{
+			fm::$core
+				->include(FM_PATH_SITE_ALL.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.fm::$core->class[$class]['object']->type.FM_PHP_EXTENSION)
+				->include(FM_SITE_DIR.FM_PATH_EXTENSION."$extension/".FM_PATH_CLASS.fm::$core->class[$class]['object']->type.FM_PHP_EXTENSION);		
+		}
+		fm::$core->class[$class]['object']->classBoot();
+		$fm->message("Class $class Loaded",$class);
+	}
+	
+	$args = func_get_args();
+	array_shift($args);
+	array_shift($args);
+	return fm::$core->class[$class]['object']->classConstruct()->__call('classStart',$args);
+}
+
+function core_method_extension($fm, $extension)
+{	
+	$extension = trim(strtolower($extension));
+	if (!array_key_exists($extension,fm::$core->extension))
+	{
+		if (file_exists(FM_PATH_SITE_ALL.FM_PATH_EXTENSION."$extension/")||file_exists(FM_SITE_DIR.FM_PATH_EXTENSION."$extension/"))
+		{
+			$fm->message("Loading extension $extension ",$extension);
+			fm::$core
+				->include(FM_PATH_CORE.FM_PATH_CLASS.$extension.FM_PHP_EXTENSION)
+				->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.$extension.FM_PHP_EXTENSION)
+				->include(FM_SITE_DIR.FM_PATH_CLASS.$extension.FM_PHP_EXTENSION);
+			foreach(fm::$core->extension as $data)
+			{
+				fm::$core->include($data['path'].FM_PATH_CLASS.$extension.FM_PHP_EXTENSION);
+			}
+			
+			if (file_exists(FM_SITE_DIR.FM_PATH_EXTENSION."$extension/"))
+				$path = FM_SITE_DIR.FM_PATH_EXTENSION."$extension/";
+			else
+				$path = FM_PATH_SITE_ALL.FM_PATH_EXTENSION."$extension/";
+			
+			fm::$core
+				->include($path.FM_PATH_CLASS.$extension.FM_PHP_EXTENSION)
+				->include($path.FM_FILE_FUNCTION.FM_PHP_EXTENSION);
+			
+			// load config
+			if (file_exists($path.FM_FILE_CONFIG.FM_PHP_EXTENSION) && is_readable($path.FM_FILE_CONFIG.FM_PHP_EXTENSION))
+			{
+				$c = array();
+				include $path.FM_FILE_CONFIG.FM_PHP_EXTENSION;
+				fm::$core->config = array_replace_recursive($c,fm::$core->config);
+			}
+
+						
+			fm::$core->extension[$extension] = array();
+			$obj = clone fm::$stdObj;
+			$obj->type = $extension;
+			$obj->classBoot();
+			
+			// move extension to the begining of the fm::$core->extension array
+			unset(fm::$core->extension[$extension]);
+			fm::$core->extension = array_merge(array($extension=>array('object'=>$obj,'path'=>$path)),fm::$core->extension);
+			
+			fm::$core->extension[$extension]['object']
+				->classConstruct()
+				->classStart();
+			$fm->message("Extension $extension Loaded",$extension);
+		}
+		else
+		{
+			$fm->error("Extension not found : ".$extension,$extension);
+		}
+	}elseif (!array_key_exists('object',fm::$core->extension[$extension]))
+	{
+		$fm->error("Try to charge an extension ( $extension ) in loading progress.",$extension);
+	}
+	
+}
+
+function core_method_include($fm,$file)
 {
 	$file = trim($file);
 	if (!array_key_exists($file,fm::$core->inclusion))
@@ -175,4 +318,67 @@ function core_fm_method_include($fm,$file)
 				fm::$core->function = array();
 		}
 	}
+}
+
+function core_method_hook($fm,$event,$callback,$args = array(),$event_part = 'main')
+{
+	$event = trim(strtolower($event));
+	if (!(array_key_exists($event,fm::$core->event) && is_array(fm::$core->event[$event])))
+		fm::$core->event[$event] = array('before'=>array(),'main'=>array(),'after'=>array());
+	$event_part = trim(strtolower($event_part));
+	if (!(array_key_exists($event_part,fm::$core->event[$event]) && is_array(fm::$core->event[$event][$event_part])))
+		fm::$core->event[$event][$event_part] = array();
+	
+	fm::$core->event[$event][$event_part][$callback] = $args;
+}
+
+function core_method_event($fm,$event,$event_part=null)
+{
+	$function_prefix = array();
+	$function_prefix[] = "site";
+	$function_prefix[] = "all";
+	foreach (fm::$core->extension as $extension=>$data)
+		$function_prefix[] = $extension;
+	$function_prefix[] = "core";
+	
+	$event = trim(strtolower($event));
+	
+	if (array_key_exists($event,fm::$core->event) && is_array(fm::$core->event[$event]))
+	{
+		foreach (array('before','main','after') as $event_part_tmp)
+		{
+			if ((array_key_exists($event_part_tmp,fm::$core->event[$event])
+				&& is_array(fm::$core->event[$event][$event_part_tmp]))
+				&& ($event_part==null || $event_part==$event_part_tmp))
+			{
+				foreach (fm::$core->event[$event][$event_part_tmp] as $callback=>$arguments)
+				{
+					$is_find = false;
+					foreach ($function_prefix as $prefix)
+					{
+						if (!$is_find)
+						{
+							if (function_exists("{$prefix}_event_callback_{$callback}"))
+							{
+								$is_find = true;
+								array_unshift($arguments,$event);
+								array_unshift($arguments,&$fm);
+								$tmp_return = call_user_func_array("{$prefix}_event_callback_{$callback}",$arguments);
+					
+								if (!(is_a($tmp_return,'fm')))
+								{
+									if (!is_null($tmp_return))
+										$fm->value = $tmp_return;
+								}
+								else
+									$fm = $tmp_return;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	return $fm;
 }
