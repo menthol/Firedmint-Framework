@@ -10,7 +10,8 @@ function core_core_method_classStart($fm)
 		->include(FM_SITE_DIR.FM_FILE_FUNCTION.FM_PHP_EXTENSION)
 		->include(FM_SITE_DIR.FM_PATH_CLASS.'fm'.FM_PHP_EXTENSION);
 	fm::$core
-		->class('site');
+		->class('site')
+		->class('url');
 }
 
 /**
@@ -145,5 +146,5 @@ function core_core_method_loadConfig($fm)
 		$c = array_replace_recursive($c,$tmp_c);
 	}
 	
-	fm::$core->config = $c;
+	fm::$config = $c;
 }

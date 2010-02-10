@@ -5,6 +5,7 @@ class fm
 {
 	public  $type;
 	public  static  $core;
+	public  static  $config;
 	public  static  $stdObj;
 
 	function __call($name, $arguments)
@@ -118,13 +119,13 @@ function fm($value = null, $type = 'fm')
 		fm::$stdObj->value   = null;
 		fm::$stdObj->type    = 'fm';
 		fm::$core->class     = array('fm'=>array('class'=>fm::$stdObj));
-		fm::$core->config    = array();
 		fm::$core->extension = array();
 		fm::$core->event     = array();
 		fm::$core->function  = array();
 		fm::$core->inclusion = array(FM_PATH_CORE.FM_FILE_COMPATIBILITY.FM_PHP_EXTENSION=>true,FM_PATH_CORE.FM_FILE_FUNCTION.FM_PHP_EXTENSION=>true);
 		fm::$core->message   = array('message'=>array(),'debug'=>array(),'notice'=>array(),'error'=>array());
 		fm::$core->type      = 'core';
+		fm::$config          = array();
 		set_error_handler("fm_ErrorHandler");
 		fm::$core
 			->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$core->type.FM_PHP_EXTENSION)
@@ -277,7 +278,7 @@ function core_method_extension($fm, $extension)
 			{
 				$c = array();
 				include $path.FM_FILE_CONFIG.FM_PHP_EXTENSION;
-				fm::$core->config = array_replace_recursive($c,fm::$core->config);
+				fm::$config = array_replace_recursive($c,fm::$core->config);
 			}
 
 						
