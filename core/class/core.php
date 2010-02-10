@@ -5,10 +5,10 @@ function core_core_method_classStart($fm)
 {
 	fm::$core
 		->loadConfig()
-		->include(FM_PATH_SITE_ALL.FM_FILE_FUNCTION.FM_PHP_EXTENSION)
-		->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.'fm'.FM_PHP_EXTENSION)
-		->include(FM_SITE_DIR.FM_FILE_FUNCTION.FM_PHP_EXTENSION)
-		->include(FM_SITE_DIR.FM_PATH_CLASS.'fm'.FM_PHP_EXTENSION);
+		->include(FM_PATH_SITE_ALL.FM_FILE_FUNCTION)
+		->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.'fm')
+		->include(FM_SITE_DIR.FM_FILE_FUNCTION)
+		->include(FM_SITE_DIR.FM_PATH_CLASS.'fm');
 	fm::$core
 		->class('site')
 		->class('url');

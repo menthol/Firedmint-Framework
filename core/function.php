@@ -128,10 +128,10 @@ function fm($value = null, $type = 'fm')
 		fm::$config          = array();
 		set_error_handler("fm_ErrorHandler");
 		fm::$core
-			->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$core->type.FM_PHP_EXTENSION)
-			->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$core->type.FM_PHP_EXTENSION)
-			->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$stdObj->type.FM_PHP_EXTENSION)
-			->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$stdObj->type.FM_PHP_EXTENSION)
+			->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$core->type)
+			->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$core->type)
+			->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$stdObj->type)
+			->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$stdObj->type)
 			->classConstruct()
 			->classStart();
 	} 
@@ -224,12 +224,12 @@ function core_method_class($fm, $class = 'fm')
 		fm::$core->class[$class]['object'] = clone fm::$stdObj;
 		fm::$core->class[$class]['object']->type = trim(strtolower($class));
 		fm::$core
-			->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$core->class[$class]['object']->type.FM_PHP_EXTENSION)
-			->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$core->class[$class]['object']->type.FM_PHP_EXTENSION)
-			->include(FM_SITE_DIR.FM_PATH_CLASS.fm::$core->class[$class]['object']->type.FM_PHP_EXTENSION);
+			->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$core->class[$class]['object']->type)
+			->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$core->class[$class]['object']->type)
+			->include(FM_SITE_DIR.FM_PATH_CLASS.fm::$core->class[$class]['object']->type);
 		foreach(fm::$core->extension as $data)
 		{
-			fm::$core->include($data['path'].FM_PATH_CLASS.fm::$core->class[$class]['object']->type.FM_PHP_EXTENSION);
+			fm::$core->include($data['path'].FM_PATH_CLASS.fm::$core->class[$class]['object']->type);
 		}
 		fm::$core->class[$class]['object']->classBoot();
 		$fm->message("Class $class Loaded",$class);
@@ -250,9 +250,9 @@ function core_method_extension($fm, $extension)
 		{
 			$fm->message("Loading extension $extension ",$extension);
 			fm::$core
-				->include(FM_PATH_CORE.FM_PATH_CLASS.$extension.FM_PHP_EXTENSION)
-				->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.$extension.FM_PHP_EXTENSION)
-				->include(FM_SITE_DIR.FM_PATH_CLASS.$extension.FM_PHP_EXTENSION);
+				->include(FM_PATH_CORE.FM_PATH_CLASS.$extension)
+				->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.$extension)
+				->include(FM_SITE_DIR.FM_PATH_CLASS.$extension);
 						
 			if (file_exists(FM_SITE_DIR.FM_PATH_EXTENSION."$extension/"))
 				$path = FM_SITE_DIR.FM_PATH_EXTENSION."$extension/";
@@ -261,17 +261,17 @@ function core_method_extension($fm, $extension)
 			
 			foreach(fm::$core->extension as $data)
 			{
-				fm::$core->include($data['path'].FM_PATH_CLASS.$extension.FM_PHP_EXTENSION);
+				fm::$core->include($data['path'].FM_PATH_CLASS.$extension);
 			}
 				
 			foreach(fm::$core->class as $class=>$data)
 			{
-				fm::$core->include($path.FM_PATH_CLASS.$class.FM_PHP_EXTENSION);
+				fm::$core->include($path.FM_PATH_CLASS.$class);
 			}
 			
 			fm::$core
-				->include($path.FM_PATH_CLASS.$extension.FM_PHP_EXTENSION)
-				->include($path.FM_FILE_FUNCTION.FM_PHP_EXTENSION);
+				->include($path.FM_PATH_CLASS.$extension)
+				->include($path.FM_FILE_FUNCTION);
 			
 			// load config
 			if (file_exists($path.FM_FILE_CONFIG.FM_PHP_EXTENSION) && is_readable($path.FM_FILE_CONFIG.FM_PHP_EXTENSION))
@@ -313,7 +313,16 @@ function core_method_include($fm,$file)
 	if (!array_key_exists($file,fm::$core->inclusion))
 	{
 		fm::$core->inclusion[$file]=null;
-		if (file_exists($file))
+		if (file_exists($file.FM_PHP_EXTENSION))
+		{
+			$tmp_f = get_defined_functions();
+			include $file.FM_PHP_EXTENSION;
+			fm::$core->inclusion[$file]=true;
+			$tmp_f2 = get_defined_functions();
+			if (count($tmp_f['user'])!=count($tmp_f2['user']))
+				fm::$core->function = array();
+		}
+		elseif (file_exists($file))
 		{
 			$tmp_f = get_defined_functions();
 			include $file;
@@ -322,6 +331,7 @@ function core_method_include($fm,$file)
 			if (count($tmp_f['user'])!=count($tmp_f2['user']))
 				fm::$core->function = array();
 		}
+		
 	}
 }
 
