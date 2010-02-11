@@ -10,42 +10,16 @@ class fm
 
 	function __call($name, $arguments)
 	{
-		if (is_a(fm::$core,'fm') && !array_key_exists($this->type,fm::$core->function))
+		if (!array_key_exists($this->type,fm::$core->function))
 			fm::$core->function[$this->type] = array();
 		
-		if(is_a(fm::$core,'fm') && !array_key_exists($name,fm::$core->function[$this->type]))
-		{
-			// find the good function 
-			$function_prefix = array();
-			$function_prefix[] = "site";
-			$function_prefix[] = "all";
-			foreach (fm::$core->extension as $extension=>$data)
-				$function_prefix[] = $extension;
-			
-			$function_prefix[] = "core";
-			
-			foreach ($function_prefix as $prefix)
-			{
-				if (!array_key_exists($name,fm::$core->function[$this->type]))
-					if (function_exists("{$prefix}_{$this->type}_method_{$name}"))
-						fm::$core->function[$this->type][$name] = "{$prefix}_{$this->type}";
-			}
-			if (!array_key_exists($name,fm::$core->function[$this->type]))
-			{
-				foreach ($function_prefix as $prefix)
-				{
-					if (!array_key_exists($name,fm::$core->function[$this->type]))
-						if (function_exists("{$prefix}_method_{$name}"))
-							fm::$core->function[$this->type][$name] = "{$prefix}";
-				}
-			}
-			
-			if (!array_key_exists($name,fm::$core->function[$this->type]) && function_exists($name))
-				fm::$core->function[$this->type][$name] = null; // set array_key_exist to true and strlen to 0
-		}
+		if (!array_key_exists('all',fm::$core->function))
+			fm::$core->function['all'] = array();
 		
-		// do not clone the object on event
 		$return = $this;
+		
+		$name = strtolower($name);
+		
 		
 		// event trigger before and main
 		if ($name!='event')
@@ -56,37 +30,45 @@ class fm
 				->save($return);
 		}
 		
-		// function lancher
-		if (is_a(fm::$core,'fm') && array_key_exists($name,fm::$core->function[$this->type]))
+		// method lancher
+		if (array_key_exists($name,fm::$core->function[$this->type]))
 		{
-			if (strlen(fm::$core->function[$this->type][$name])>0)
+			array_unshift($arguments,&$return);
+			$tmp_return = call_user_func_array(fm::$core->function[$this->type][$name],$arguments);
+			
+			if (!(is_a($tmp_return,'fm')))
 			{
-				if (function_exists(fm::$core->function[$this->type][$name]."_method_$name"))
-				{
-					array_unshift($arguments,&$return);
-					$tmp_return = call_user_func_array(fm::$core->function[$this->type][$name]."_method_$name",$arguments);
-					
-					if (!(is_a($tmp_return,'fm')))
-					{
-						if (!is_null($tmp_return))
-							$return->value = $tmp_return;
-					}
-					else
-						$return = $tmp_return;
-				}
-			}
-			elseif (function_exists($name))
-			{
-				array_unshift($arguments,$return->value);
-				
-				$tmp_return = call_user_func_array($name,$arguments);
-				
-				if (!(is_a($tmp_return,'fm')))
+				if (!is_null($tmp_return))
 					$return->value = $tmp_return;
-				else		
-					$return = $tmp_return;
 			}
-		} else
+			else
+				$return = $tmp_return;
+		}
+		elseif (array_key_exists($name,fm::$core->function['all']))
+		{
+			array_unshift($arguments,&$return);
+			$tmp_return = call_user_func_array(fm::$core->function['all'][$name],$arguments);
+			
+			if (!(is_a($tmp_return,'fm')))
+			{
+				if (!is_null($tmp_return))
+					$return->value = $tmp_return;
+			}
+			else
+				$return = $tmp_return;
+		}
+		elseif (function_exists($name))
+		{
+			array_unshift($arguments,$return->value);
+			
+			$tmp_return = call_user_func_array($name,$arguments);
+			
+			if (!(is_a($tmp_return,'fm')))
+				$return->value = $tmp_return;
+			else		
+				$return = $tmp_return;
+		}
+		elseif($name!='message')
 		{
 			fm::$core->message['notice'][] = array(
 				'message' => "function {$this->type}_{$name} not found",
@@ -98,9 +80,57 @@ class fm
 		// event trigger after
 		if ($name!='event')
 			$return->event("{$this->type}_{$name}",'after')->save($return);
-		
 		// return
 		return $return;	
+	}
+	
+	function registerMethods()
+	{
+		$declared_function = get_defined_functions();
+		$registrable_function = array_diff($declared_function['user'],fm::$core->ufunction);
+		fm::$core->ufunction = $declared_function['user'];
+		
+		if (count($registrable_function))
+		{
+			$function_prefix = array();
+			$function_prefix[] = "site";
+			$function_prefix[] = "all";
+			foreach (fm::$core->extension as $extension=>$data)
+				$function_prefix[] = strtolower($extension);
+			
+			$function_prefix[] = "core";
+			$prefix_weight = array_flip($function_prefix);
+		
+			foreach ($registrable_function as $function)
+			{
+				$matches = array();
+				$function = strtolower($function);
+				if (preg_match('/^([^_]*)_?(.*)_method_([^_]*)$/', $function, $matches))
+				{
+					list($function_name,$prefix,$class,$method) = $matches;
+					if (strlen($class)==0)
+						$class = 'all';
+					
+					if (!array_key_exists($class,fm::$core->function))
+						fm::$core->function[$class] = array();
+					if (!array_key_exists($method,fm::$core->function[$class]))
+					{
+						fm::$core->function[$class][$method] = $function;
+					}
+					else
+					{
+						$f_matches = array();
+						preg_match('/^([^_]*)/', fm::$core->function[$class][$method], $f_matches);
+						if ($prefix_weight[$f_matches[1]]>$prefix_weight[$prefix])
+						{
+							fm::$core->function[$class][$method] = $function;
+						}
+					}
+				}
+			}
+		}
+		
+		return $this;
 	}
 	
 	function save(&$var)
@@ -122,12 +152,14 @@ function fm($value = null, $type = 'fm')
 		fm::$core->extension = array();
 		fm::$core->event     = array();
 		fm::$core->function  = array();
+		fm::$core->ufunction = array();
 		fm::$core->inclusion = array(FM_PATH_CORE.FM_FILE_COMPATIBILITY.FM_PHP_EXTENSION=>true,FM_PATH_CORE.FM_FILE_FUNCTION.FM_PHP_EXTENSION=>true);
 		fm::$core->message   = array('message'=>array(),'debug'=>array(),'notice'=>array(),'error'=>array());
 		fm::$core->type      = 'core';
 		fm::$config          = array();
 		set_error_handler("fm_ErrorHandler");
 		fm::$core
+			->registerMethods()
 			->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$core->type)
 			->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$core->type)
 			->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$stdObj->type)
@@ -304,35 +336,72 @@ function core_method_extension($fm, $extension)
 	{
 		$fm->error("Try to charge an extension ( $extension ) in loading progress.",$extension);
 	}
-	
 }
 
-function core_method_include($fm,$file)
+function core_method_include($fm, $file = null)
 {
 	$file = trim($file);
-	if (!array_key_exists($file,fm::$core->inclusion))
+	
+	if (strlen($file)==0)
+		$file = trim($fm->value);
+	
+	if (strlen($file)>0 && !array_key_exists($file.FM_PHP_EXTENSION,fm::$core->inclusion) && !array_key_exists($file,fm::$core->inclusion))
 	{
-		fm::$core->inclusion[$file]=null;
 		if (file_exists($file.FM_PHP_EXTENSION))
 		{
-			$tmp_f = get_defined_functions();
 			include $file.FM_PHP_EXTENSION;
-			fm::$core->inclusion[$file]=true;
-			$tmp_f2 = get_defined_functions();
-			if (count($tmp_f['user'])!=count($tmp_f2['user']))
-				fm::$core->function = array();
+			fm::$core->inclusion[$file.FM_PHP_EXTENSION]=true;
+			fm::$core->registerMethods();
 		}
 		elseif (file_exists($file))
 		{
-			$tmp_f = get_defined_functions();
 			include $file;
 			fm::$core->inclusion[$file]=true;
-			$tmp_f2 = get_defined_functions();
-			if (count($tmp_f['user'])!=count($tmp_f2['user']))
-				fm::$core->function = array();
+			fm::$core->registerMethods();
 		}
-		
+		else
+		{
+			fm::$core->inclusion[$file]=null;
+		}
 	}
+}
+
+function core_method_find($fm,$file)
+{
+	$file = trim($file);
+	$return = clone fm::$stdObj;
+	$return->value = null;
+	if (strlen($file)>0)
+	{	
+		if (file_exists(FM_SITE_DIR.$file.FM_PHP_EXTENSION))
+			$return->value = FM_SITE_DIR.$file;
+		elseif (file_exists(FM_SITE_DIR.$file))
+			$return->value = FM_SITE_DIR.$file;
+		elseif (file_exists(FM_PATH_SITE_ALL.$file.FM_PHP_EXTENSION))
+			$return->value = FM_PATH_SITE_ALL.$file;
+		elseif (file_exists(FM_PATH_SITE_ALL.$file))
+			$return->value = FM_PATH_SITE_ALL.$file;
+		else
+		{
+			foreach (fm::$core->extension as $extension)
+			{
+				if (file_exists($extension['path'].$file.FM_PHP_EXTENSION))
+					$return->value = $extension['path'].$file;
+				elseif (file_exists($extension['path'].$file))
+					$return->value = $extension['path'].$file;
+			}
+			if ($return->value == null)
+			{
+				if (file_exists(FM_PATH_CORE.$file.FM_PHP_EXTENSION))
+					$return->value = FM_PATH_CORE.$file;
+				elseif (file_exists(FM_PATH_CORE.$file))
+					$return->value = FM_PATH_CORE.$file;
+			}
+		}
+	}
+	if ($return->value == null)
+		fm::$core->notice("Can't found $file");
+	return $return;
 }
 
 function core_method_hook($fm,$event,$callback,$args = array(),$event_part = 'main')
