@@ -31,23 +31,32 @@ class fm
 		}
 		
 		// method lancher
+		$function_name = null;
 		if (array_key_exists($name,fm::$core->function[$this->type]))
 		{
 			array_unshift($arguments,&$return);
-			$tmp_return = call_user_func_array(fm::$core->function[$this->type][$name],$arguments);
-			
-			if (!(is_a($tmp_return,'fm')))
-			{
-				if (!is_null($tmp_return))
-					$return->value = $tmp_return;
-			}
-			else
-				$return = $tmp_return;
+			$function_name = fm::$core->function[$this->type][$name];
 		}
 		elseif (array_key_exists($name,fm::$core->function['all']))
 		{
 			array_unshift($arguments,&$return);
-			$tmp_return = call_user_func_array(fm::$core->function['all'][$name],$arguments);
+			$function_name = fm::$core->function['all'][$name];
+		}
+		elseif (function_exists($name))
+		{
+			array_unshift($arguments,$return->value);
+			$function_name = $name;
+		}
+		
+		if (strlen($function_name))
+		{
+			switch (count($arguments))
+			{
+				case 1 : $tmp_return = $function_name($arguments[0]); break;
+				case 2 : $tmp_return = $function_name($arguments[0],$arguments[1]); break;
+				case 3 : $tmp_return = $function_name($arguments[0],$arguments[1],$arguments[2]); break;
+				default: $tmp_return = call_user_func_array($function_name,$arguments);
+			}
 			
 			if (!(is_a($tmp_return,'fm')))
 			{
@@ -55,20 +64,8 @@ class fm
 					$return->value = $tmp_return;
 			}
 			else
-				$return = $tmp_return;
-		}
-		elseif (function_exists($name))
-		{
-			array_unshift($arguments,$return->value);
-			
-			$tmp_return = call_user_func_array($name,$arguments);
-			
-			if (!(is_a($tmp_return,'fm')))
-				$return->value = $tmp_return;
-			else		
-				$return = $tmp_return;
-		}
-		elseif($name!='message')
+				$return = $tmp_return;	
+		}elseif($name!='message')
 		{
 			fm::$core->message['notice'][] = array(
 				'message' => "function {$this->type}_{$name} not found",
@@ -76,6 +73,8 @@ class fm
 				'args'    => array('type'=>$this->type,'name'=>$name,),
 			);
 		}
+		
+		
 		
 		// event trigger after
 		if ($name!='event')
