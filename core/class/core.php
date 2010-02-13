@@ -11,7 +11,7 @@ function core_core_method_classStart($fm)
 		->include(FM_SITE_DIR.FM_PATH_CLASS.'fm');
 	fm::$core
 		->class('site')
-		->class('url')
+		->class('route')
 			->getController();
 }
 

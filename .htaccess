@@ -33,17 +33,17 @@ DirectoryIndex index.php
 
   # Protect system files from being viewed
   RewriteRule ^(core/|var/private/|var/log/|public/private/) - [F,L]
-  RewriteRule ^site/[^\/]*/(extension/[^\/]*/)?(auth|class|component|controller|db|element|form|log|model|task|url|view)/ - [F,L]
+  RewriteRule ^site/[^\/]*/(extension/[^\/]*/)?(auth|class|component|controller|db|element|form|model|task|view)/ - [F,L]
   
   # Only alow public directories to be public on templates directories
   RewriteRule ^site/[^\/]*/template/[^\/]*/public/ - [S=1]
   RewriteRule ^site/[^\/]*/template/[^\/]*/.{2,} - [F,L]
   
   
-  # Rewrite URLs of the form 'x' to the form 'index.php?q=x'.
+  # Rewrite URLs of the form 'x' to the form 'index.php/x'.
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{REQUEST_URI} !=/favicon.ico
-  RewriteRule ^(.*)$ index.php?q=$1 [L,QSA]
+  RewriteRule ^(.*)$ index.php/$1 [L,QSA]
 </IfModule>
 

@@ -137,6 +137,11 @@ class fm
 		$var = $this;
 		return $this;
 	}
+	
+	function __toString()
+	{
+		return "{$this->toString()->value}";
+	}
 }
 
 function fm($value = null, $type = 'fm')
@@ -304,7 +309,7 @@ function core_method_extension($fm, $extension)
 				->include($path.FM_PATH_CLASS.$extension)
 				->include($path.FM_FILE_FUNCTION);
 			
-			// load config
+			// load config /!\ Not the good way,  need to be rewriten
 			if (file_exists($path.FM_FILE_CONFIG.FM_PHP_EXTENSION) && is_readable($path.FM_FILE_CONFIG.FM_PHP_EXTENSION))
 			{
 				$c = array();
@@ -464,4 +469,9 @@ function core_method_event($fm,$event,$event_part=null)
 	}
 	
 	return $fm;
+}
+
+function site_method_preController($fm,$c,$args,$vars)
+{
+	$vars += $args;
 }

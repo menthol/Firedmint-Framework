@@ -43,7 +43,6 @@ define('FM_PATH_MODEL',          'model/');
 define('FM_PATH_PUBLIC',         'public/');
 define('FM_PATH_TASK',           'task/');
 define('FM_PATH_TEMPLATE',       'template/');
-define('FM_PATH_URL',            'url/');
 define('FM_PATH_VIEW',           'view/');
 
 // define default secondary paths (files)
@@ -51,6 +50,7 @@ define('FM_FILE_COMPATIBILITY',  'compatibility');
 define('FM_FILE_CONFIG',         'config');
 define('FM_FILE_FUNCTION',       'function');
 define('FM_FILE_L10N',           'l10n');
+define('FM_FILE_ROUTE',          'route');
 
 // others constants
 define('FM_PHP_EXTENSION','.php');
