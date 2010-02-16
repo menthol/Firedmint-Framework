@@ -26,8 +26,8 @@ define('FM_PATH_STATIC_PRIVATE', FM_PATH_STATIC.'private/');
 define('FM_PATH_STATIC_PUBLIC',  FM_PATH_STATIC.'public/');
 define('FM_PATH_CORE',           'core/');
 define('FM_PATH_SITE',           'site/');
-define('FM_PATH_SITE_ALL',       FM_PATH_SITE.'all/');
-define('FM_PATH_SITE_DEFAULT',   FM_PATH_SITE.'default/');
+define('FM_PATH_SITE_ALL',       'all/');
+define('FM_PATH_SITE_DEFAULT',   'default/');
 
 // define default secondary paths (directories)
 define('FM_PATH_AUTH',           'auth/');
@@ -38,6 +38,7 @@ define('FM_PATH_DB',             'db/');
 define('FM_PATH_ELEMENT',        'element/');
 define('FM_PATH_EXTENSION',      'extension/');
 define('FM_PATH_FORM',           'form/');
+define('FM_PATH_L10N',           'l10n/');
 define('FM_PATH_LOG',            'log/');
 define('FM_PATH_MODEL',          'model/');
 define('FM_PATH_PUBLIC',         'public/');
@@ -48,8 +49,8 @@ define('FM_PATH_VIEW',           'view/');
 // define default secondary paths (files)
 define('FM_FILE_COMPATIBILITY',  'compatibility');
 define('FM_FILE_CONFIG',         'config');
+define('FM_FILE_EXTENSION',      'extension');
 define('FM_FILE_FUNCTION',       'function');
-define('FM_FILE_L10N',           'l10n');
 define('FM_FILE_ROUTE',          'route');
 
 // others constants

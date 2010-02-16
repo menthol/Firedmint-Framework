@@ -37,6 +37,11 @@ class fm
 			array_unshift($arguments,&$return);
 			$function_name = fm::$core->function[$this->type][$name];
 		}
+		elseif (strpos($this->type,'_') && array_key_exists($name,fm::$core->function[substr($this->type,0,strpos($this->type,'_'))]))
+		{
+			array_unshift($arguments,&$return);
+			$function_name = fm::$core->function[substr($this->type,0,strpos($this->type,'_'))][$name];
+		}
 		elseif (array_key_exists($name,fm::$core->function['all']))
 		{
 			array_unshift($arguments,&$return);
@@ -147,7 +152,7 @@ class fm
 function fm($value = null, $type = 'fm')
 {
 	if (!is_object(fm::$core))
-	{
+	{	
 		fm::$core            = new fm();
 		fm::$stdObj          = clone fm::$core;
 		fm::$stdObj->value   = null;
@@ -165,17 +170,19 @@ function fm($value = null, $type = 'fm')
 		fm::$core
 			->registerMethods()
 			->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$core->type)
-			->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$core->type)
+			->include(FM_PATH_SITE.FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$core->type)
 			->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$stdObj->type)
-			->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$stdObj->type)
+			->include(FM_PATH_SITE.FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$stdObj->type)
 			->classConstruct()
 			->classStart();
-	} 
-
-	if($value==null && $type == 'fm')
-		return fm::$core;
-	
-	return fm::$core->class($type,$value);
+	}
+	else
+	{
+		if($value==null && $type == 'fm')
+			return fm::$core;
+		
+		return fm::$core->class($type,$value);
+	}
 }
 
 function core_method_message($fm,$message)
@@ -256,90 +263,25 @@ function core_method_class($fm, $class = 'fm')
 {
 	if (!array_key_exists($class,fm::$core->class))
 	{
-		$fm->message("Loading class $class ",$class);
+		$fm->message("Loading class $class ");
 		fm::$core->class[$class]['object'] = clone fm::$stdObj;
 		fm::$core->class[$class]['object']->type = trim(strtolower($class));
 		fm::$core
 			->include(FM_PATH_CORE.FM_PATH_CLASS.fm::$core->class[$class]['object']->type)
-			->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$core->class[$class]['object']->type)
-			->include(FM_SITE_DIR.FM_PATH_CLASS.fm::$core->class[$class]['object']->type);
+			->include(FM_PATH_SITE.FM_PATH_SITE_ALL.FM_PATH_CLASS.fm::$core->class[$class]['object']->type)
+			->include(FM_PATH_SITE.FM_SITE_DIR.FM_PATH_CLASS.fm::$core->class[$class]['object']->type);
 		foreach(fm::$core->extension as $data)
 		{
 			fm::$core->include($data['path'].FM_PATH_CLASS.fm::$core->class[$class]['object']->type);
 		}
 		fm::$core->class[$class]['object']->classBoot();
-		$fm->message("Class $class Loaded",$class);
+		$fm->message("Class $class Loaded");
 	}
 	
 	$args = func_get_args();
 	array_shift($args);
 	array_shift($args);
 	return fm::$core->class[$class]['object']->classConstruct()->__call('classStart',$args);
-}
-
-function core_method_extension($fm, $extension)
-{	
-	$extension = trim(strtolower($extension));
-	if (!array_key_exists($extension,fm::$core->extension))
-	{
-		if (file_exists(FM_PATH_SITE_ALL.FM_PATH_EXTENSION."$extension/")||file_exists(FM_SITE_DIR.FM_PATH_EXTENSION."$extension/"))
-		{
-			$fm->message("Loading extension $extension ",$extension);
-			fm::$core
-				->include(FM_PATH_CORE.FM_PATH_CLASS.$extension)
-				->include(FM_PATH_SITE_ALL.FM_PATH_CLASS.$extension)
-				->include(FM_SITE_DIR.FM_PATH_CLASS.$extension);
-						
-			if (file_exists(FM_SITE_DIR.FM_PATH_EXTENSION."$extension/"))
-				$path = FM_SITE_DIR.FM_PATH_EXTENSION."$extension/";
-			else
-				$path = FM_PATH_SITE_ALL.FM_PATH_EXTENSION."$extension/";
-			
-			foreach(fm::$core->extension as $data)
-			{
-				fm::$core->include($data['path'].FM_PATH_CLASS.$extension);
-			}
-				
-			foreach(fm::$core->class as $class=>$data)
-			{
-				fm::$core->include($path.FM_PATH_CLASS.$class);
-			}
-			
-			fm::$core
-				->include($path.FM_PATH_CLASS.$extension)
-				->include($path.FM_FILE_FUNCTION);
-			
-			// load config /!\ Not the good way,  need to be rewriten
-			if (file_exists($path.FM_FILE_CONFIG.FM_PHP_EXTENSION) && is_readable($path.FM_FILE_CONFIG.FM_PHP_EXTENSION))
-			{
-				$c = array();
-				include $path.FM_FILE_CONFIG.FM_PHP_EXTENSION;
-				fm::$config = array_replace_recursive($c,fm::$core->config);
-			}
-
-						
-			fm::$core->extension[$extension] = array('path'=>$path);
-			$obj = clone fm::$stdObj;
-			$obj->type = $extension;
-			$obj->classBoot();
-			
-			// move extension to the begining of the fm::$core->extension array
-			unset(fm::$core->extension[$extension]);
-			fm::$core->extension = array_merge(array($extension=>array('object'=>$obj,'path'=>$path)),fm::$core->extension);
-			
-			fm::$core->extension[$extension]['object']
-				->classConstruct()
-				->classStart();
-			$fm->message("Extension $extension Loaded",$extension);
-		}
-		else
-		{
-			$fm->error("Extension not found : ".$extension,$extension);
-		}
-	}elseif (!array_key_exists('object',fm::$core->extension[$extension]))
-	{
-		$fm->error("Try to charge an extension ( $extension ) in loading progress.",$extension);
-	}
 }
 
 function core_method_include($fm, $file = null)
@@ -377,14 +319,14 @@ function core_method_find($fm,$file)
 	$return->value = null;
 	if (strlen($file)>0)
 	{	
-		if (file_exists(FM_SITE_DIR.$file.FM_PHP_EXTENSION))
-			$return->value = FM_SITE_DIR.$file;
-		elseif (file_exists(FM_SITE_DIR.$file))
-			$return->value = FM_SITE_DIR.$file;
-		elseif (file_exists(FM_PATH_SITE_ALL.$file.FM_PHP_EXTENSION))
-			$return->value = FM_PATH_SITE_ALL.$file;
-		elseif (file_exists(FM_PATH_SITE_ALL.$file))
-			$return->value = FM_PATH_SITE_ALL.$file;
+		if (file_exists(FM_PATH_SITE.FM_SITE_DIR.$file.FM_PHP_EXTENSION))
+			$return->value = FM_PATH_SITE.FM_SITE_DIR.$file;
+		elseif (file_exists(FM_PATH_SITE.FM_SITE_DIR.$file))
+			$return->value = FM_PATH_SITE.FM_SITE_DIR.$file;
+		elseif (file_exists(FM_PATH_SITE.FM_PATH_SITE_ALL.$file.FM_PHP_EXTENSION))
+			$return->value = FM_PATH_SITE.FM_PATH_SITE_ALL.$file;
+		elseif (file_exists(FM_PATH_SITE.FM_PATH_SITE_ALL.$file))
+			$return->value = FM_PATH_SITE.FM_PATH_SITE_ALL.$file;
 		else
 		{
 			foreach (fm::$core->extension as $extension)
@@ -469,9 +411,4 @@ function core_method_event($fm,$event,$event_part=null)
 	}
 	
 	return $fm;
-}
-
-function site_method_preController($fm,$c,$args,$vars)
-{
-	$vars += $args;
 }

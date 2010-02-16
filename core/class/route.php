@@ -4,8 +4,8 @@ if (!defined('FM_SECURITY')) die();
 function core_route_method_classBoot($fm)
 {
 	$file = array();
-	$file[] = FM_SITE_DIR.FM_FILE_ROUTE;
-	$file[] = FM_PATH_SITE_ALL.FM_FILE_ROUTE;
+	$file[] = FM_PATH_SITE.FM_SITE_DIR.FM_FILE_ROUTE;
+	$file[] = FM_PATH_SITE.FM_PATH_SITE_ALL.FM_FILE_ROUTE;
 	foreach(fm::$core->extension as $data)
 	{
 		$file[] = $data['path'].FM_FILE_ROUTE;
@@ -31,6 +31,8 @@ function core_route_method_classBoot($fm)
 	{
 		list($controller,$action,$args,$vars) = $tmp_route + fm::$config['route']['default_route'] + array(null,null,array(),array());
 		
+		$args += array('extension'=>'[a-zA-Z0-9]*');
+		
 		$matches = array();
 		preg_match_all('/%([0-9a-zA-Z-_]*)%/',$url,$matches);
 		
@@ -52,6 +54,9 @@ function core_route_method_classBoot($fm)
 			$regex = preg_replace($patterns, $replacements, $url);
 			if (strpos($regex,'%')===false)
 			{
+				
+				$arguments += array('extension'=>$args['extension']);
+				
 				$re['#^'.$regex.'$#'] = array($controller,$action,$arguments,$vars,$url,'#^'.$regex.'$#');
 				$rr[$controller][$action][$url] = $arguments;
 				$fm->route['path'][$url] = array($controller,$action,$arguments,$vars,$url,'#^'.$regex.'$#');
@@ -61,9 +66,9 @@ function core_route_method_classBoot($fm)
 		{
 			if (strpos($url,'%')===false)
 			{
-				$re['#^'.$url.'$#'] = array($controller,$action,array(),$vars,$url,'#^'.$url.'$#');
-				$rr[$controller][$action][$url] = array();
-				$fm->route['path'][$url] = array($controller,$action,array(),$vars,$url,'#^'.$url.'$#');
+				$re['#^'.$url.'$#'] = array($controller,$action,array('extension'=>'[a-zA-Z0-9]*'),$vars,$url,'#^'.$url.'$#');
+				$rr[$controller][$action][$url] = array('extension'=>'[a-zA-Z0-9]*');
+				$fm->route['path'][$url] = array($controller,$action,array('extension'=>'[a-zA-Z0-9]*'),$vars,$url,'#^'.$url.'$#');
 			}
 		}
 		
@@ -76,13 +81,25 @@ function core_route_method_classBoot($fm)
 
 function core_route_method_getController($fm)
 {	
-	$path_keys = array_filter(array_keys($fm->route['regex']),create_function('$arg','return preg_match($arg,(array_key_exists(\'PATH_INFO\',$_SERVER)?$_SERVER[\'PATH_INFO\']:\'/\'));'));
+	$url = (array_key_exists('PATH_INFO',$_SERVER)?$_SERVER['PATH_INFO']:'/');
+	
+	$matches = array();
+	$extension = null;
+	if (preg_match('/^(.*)\.([0-9a-zA-Z]*)$/',$url,$matches))
+	{
+		$url = $matches[1];
+		$extension = $matches[2];
+	}
+	
+	$path_keys = array_filter(array_keys($fm->route['regex']),create_function('$arg','return preg_match($arg,\''.$url.'\') && preg_match(\'#^(\'.fm::$core->class[\'route\'][\'object\']->route[\'regex\'][$arg][2][\'extension\'].\')$#\',\''.$extension.'\');'));
+	
 	if (count($path_keys)>0)
 	{
 		list($controller,$action,$args,$vars,$path,$regex) = $fm->route['regex'][current($path_keys)];
 		
 		$matches = array();
-		preg_match($regex,(array_key_exists('PATH_INFO',$_SERVER)?$_SERVER['PATH_INFO']:'/'),$matches);
+		
+		preg_match($regex,$url,$matches);
 		
 		$arguments = array();
 		
@@ -94,17 +111,17 @@ function core_route_method_getController($fm)
 				$arguments[$key] = array_shift($matches); 
 			}
 		}
-		
-		return fm::$core->class('controller',$controller,$action,$arguments + $vars + $_GET);
+
+		return fm::$core->class('controller',$controller,$action,array('extension'=>$extension) + $arguments + $vars + $_GET);
 	}
-	elseif (fm::$config['route']['magic_route']==true && count(explode('/',array_key_exists('PATH_INFO',$_SERVER)?$_SERVER['PATH_INFO']:'/'))>=3)
+	elseif (fm::$config['route']['magic_route']==true && count(explode('/',$url))>=3)
 	{
-		list($void,$controller,$action) = explode('/',array_key_exists('PATH_INFO',$_SERVER)?$_SERVER['PATH_INFO']:'/');
-		return fm::$core->class('controller',$controller,$action,$_GET);
+		list($void,$controller,$action) = explode('/',$url);
+		return fm::$core->class('controller',$controller,$action,array('extension'=>$extension) + $_GET);
 	}
 	else
 	{
-		return fm::$core->class('controller',fm::$config['route']['default_route'][0],fm::$config['route']['default_route'][1],$_GET);
+		return fm::$core->class('controller',fm::$config['route']['default_route'][0],fm::$config['route']['default_route'][1],array('extension'=>$extension) + $_GET);
 	}
 	
 }
