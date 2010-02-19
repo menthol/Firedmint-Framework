@@ -31,7 +31,6 @@ define('FM_PATH_SITE_DEFAULT',   'default/');
 
 // define default secondary paths (directories)
 define('FM_PATH_AUTH',           'auth/');
-define('FM_PATH_CLASS',          'class/');
 define('FM_PATH_COMPONENT',      'component/');
 define('FM_PATH_CONTROLLER',     'controller/');
 define('FM_PATH_DB',             'db/');
@@ -40,6 +39,7 @@ define('FM_PATH_EXTENSION',      'extension/');
 define('FM_PATH_FORM',           'form/');
 define('FM_PATH_L10N',           'l10n/');
 define('FM_PATH_LOG',            'log/');
+define('FM_PATH_METHOD',         'method/');
 define('FM_PATH_MODEL',          'model/');
 define('FM_PATH_PUBLIC',         'public/');
 define('FM_PATH_TASK',           'task/');
@@ -54,11 +54,11 @@ define('FM_FILE_FUNCTION',       'function');
 define('FM_FILE_ROUTE',          'route');
 
 // others constants
-define('FM_PHP_EXTENSION','.php');
+define('FM_PHP_EXTENSION',       '.php');
 
 // boot includes
 require_once FM_PATH_CORE.FM_FILE_COMPATIBILITY.FM_PHP_EXTENSION;
 require_once FM_PATH_CORE.FM_FILE_FUNCTION.FM_PHP_EXTENSION;
 
-// boot Firedmint
-fm();
+// boot
+boot();

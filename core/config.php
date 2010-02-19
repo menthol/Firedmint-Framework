@@ -16,3 +16,7 @@ $c['view'] = array(
 	'cache'    => 1800,
 	'template' => null,
 );
+
+$c['build'] = array(
+	'key' => 'rebuild',
+);
