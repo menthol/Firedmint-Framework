@@ -7,14 +7,17 @@ if (defined('FM_SECURITY'))
 	die();
 }
 
-@define('FM_SECURITY',true);
+@define('FM_SECURITY',           true);
 
-@define('FM_START_TIME',microtime(true));
+@define('FM_START_TIME',         microtime(true));
 
 // don't show errors
 error_reporting(E_ALL);
 ini_set('display_errors',1);
 ob_start();
+
+
+define('FM_VERSION',             '0.1-svn');
 
 // define default primary paths
 define('FM_PATH_VAR',            'var/');
@@ -62,3 +65,31 @@ require_once FM_PATH_CORE.FM_FILE_FUNCTION.FM_PHP_EXTENSION;
 
 // boot
 boot();
+
+$controller = route::factory()->getController();
+
+ob_start();
+html::addCss('css/core');
+html::addCss('css/theme');
+html::addCss('css/site');
+html::addJs('js/jquery');
+$view = $controller->startController();
+$out = ob_get_contents();
+while (ob_get_level())
+	ob_end_clean();
+
+ob_start();
+if (is_a($view,'view'))
+	$view->get('document');
+ob_end_flush();
+
+while (ob_get_level())
+	ob_end_clean();
+
+	
+ob_start();
+
+// shutbown
+
+while (ob_get_level())
+	ob_end_clean();

@@ -1,4 +1,2 @@
-<?php 
+<?php
 if (!defined('FM_SECURITY')) die();
-
-public  $data = array();

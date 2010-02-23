@@ -6,10 +6,12 @@ $c['l10n'] = array(
 );
 
 $c['route'] = array(
-	'default_route'  => array('error','404'),
-	'error_route'    => array('error'),
-	'redirect_route' => array('redirect'),
-	'magic_route'    => false,
+	'default_route'     => array('error','404'),
+	'error_route'       => array('error'),
+	'redirect_route'    => array('redirect'),
+	'magic_route'       => false,
+	'default_extension' => 'html',
+	'show_extension'    => true,
 );
 
 $c['view'] = array(
@@ -17,6 +19,15 @@ $c['view'] = array(
 	'template' => null,
 );
 
-$c['build'] = array(
-	'key' => 'rebuild',
+$c['clear'] = array(
+	'key' => 'fm_clear',
+	'build' => 'build',
+	'view' => 'view',
+	'model' => 'model',
+	'all' => 'all',
+);
+
+$c['site'] = array(
+	'site-name' => 'Default Website',
+	'charset' => 'UTF-8',
 );

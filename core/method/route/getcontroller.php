@@ -7,7 +7,7 @@ function getController()
 	
 	$matches = array();
 	$extension = null;
-	if (preg_match('/^(.*)\.([0-9a-zA-Z]*)$/',$url,$matches))
+	if (preg_match('/^(.*)\.([0-9a-zA-Z]+)$/',$url,$matches))
 	{
 		$url = $matches[1];
 		$extension = $matches[2];

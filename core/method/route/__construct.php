@@ -36,7 +36,7 @@ function __construct()
 		$args += array('extension'=>'[a-zA-Z0-9]*');
 		
 		$matches = array();
-		preg_match_all('/%([0-9a-zA-Z-_]*)%/',$url,$matches);
+		preg_match_all('/%([0-9a-zA-Z-_]+)%/',$url,$matches);
 		
 		if (count($matches[0])>0)
 		{
@@ -45,7 +45,7 @@ function __construct()
 			$arguments = array();
 			foreach ($matches[1] as $var)
 			{
-				$arguments[$var] = '.*';
+				$arguments[$var] = '.+';
 				if (array_key_exists($var,$args))
 					$arguments[$var] = $args[$var];
 				

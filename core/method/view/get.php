@@ -1,45 +1,50 @@
 <?php 
 if (!defined('FM_SECURITY')) die();
 
-function get($part,$argument = null)
+function get($part,$data = null)
 {
-	if (!is_array($argument))
+	if (strlen($part)==0)
 	{
-		$argument = $this->argument;
+		return $this;
+	}
+	if (!is_array($data))
+	{
+		$data = $this->data;
 	}
 	
-	if (array_key_exists('l10n',$argument))
+	if (array_key_exists('l10n',$data))
 	{
-		$argument += array('l10n'=>$argument['l10n']);
+		$data += array('l10n'=>$data['l10n']);
 	}
-	elseif (array_key_exists('l10n',$this->argument))
+	elseif (array_key_exists('l10n',$this->data))
 	{
-		$argument += array('l10n'=>$this->argument['l10n']);
+		$data += array('l10n'=>$this->data['l10n']);
 	}
 	else
 	{
-		$argument += array('l10n'=>fm::$config['l10n']['local']);
+		$data += array('l10n'=>fm::$config['l10n']['local']);
 	}
 	
-	$view = view::factory($this->display_type,$this->view,$argument,$this->cache,$this->force_reload);
+	$view = view::factory($this->display_type,$this->view,$data,$this->cache,$this->force_reload);
 	
 	$view->part = $part;
 	$view->as_cache = false;
 	
-	if (!is_dir(FM_PATH_VAR_PRIVATE.FM_SITE_DIR."view/{$view->display_type}/".implode('_',$view->view)."/{$view->part}"))
-		mkdir(FM_PATH_VAR_PRIVATE.FM_SITE_DIR."view/{$view->display_type}/".implode('_',$view->view)."/{$view->part}");
+	if (!is_dir(FM_PATH_VAR_PRIVATE.FM_SITE_DIR."view/{$view->display_type}/".implode('_',$view->view)."/".implode('.',explode('/',$view->part))))
+		mkdir(FM_PATH_VAR_PRIVATE.FM_SITE_DIR."view/{$view->display_type}/".implode('_',$view->view)."/".implode('.',explode('/',$view->part)));
 	
-	$args_key = sha1(serialize($argument));
-	$file_var = FM_PATH_VAR_PRIVATE.FM_SITE_DIR."view/{$view->display_type}/".implode('_',$view->view)."/{$view->part}/{$args_key}.vars".FM_PHP_EXTENSION;
-	$file     = FM_PATH_VAR_PRIVATE.FM_SITE_DIR."view/{$view->display_type}/".implode('_',$view->view)."/{$view->part}/{$args_key}".FM_PHP_EXTENSION;
+	$args_key = sha1(serialize($data));
+	$file_var = FM_PATH_VAR_PRIVATE.FM_SITE_DIR."view/{$view->display_type}/".implode('_',$view->view)."/".implode('.',explode('/',$view->part))."/{$args_key}.vars".FM_PHP_EXTENSION;
+	$file     = FM_PATH_VAR_PRIVATE.FM_SITE_DIR."view/{$view->display_type}/".implode('_',$view->view)."/".implode('.',explode('/',$view->part))."/{$args_key}".FM_PHP_EXTENSION;
 	
-	$template = view::findView($view->part)->value;
+	$template = $view->findView($view->part)->value;
 	
-	#############################
-	if (strlen($template)>0)
-		$template_version = filemtime($template);
-	else
-		$template_version = null;
+	if (strlen($template)==0)
+	{	
+		log::error('Part no found : '.$view->part);
+		return $this;
+	}	
+	$template_version = filemtime($template);
 	
 	$load_cache = false;
 	
@@ -49,7 +54,7 @@ function get($part,$argument = null)
 		$v = array();
 		include $file_var;
 		
-		if ((array_key_exists('valid_until',$v) && (($v['valid_until']>time() && $v['template_version']==$template_version))) || strlen($template)==0)
+		if ((array_key_exists('valid_until',$v) && (($v['valid_until']>time() && $v['template_version']==$template_version))))
 			$load_cache = true;
 	}
 	
@@ -57,20 +62,12 @@ function get($part,$argument = null)
 	{
 		$view->is_valid = true;
 		
-		@ob_clean();
-		foreach ($argument as $var=>$arg)
-		{
-			if (is_a($arg,'fm'))
-				$$var = $arg;
-			else
-			{
-				$$var = fm::factory();
-				$$var->value = $arg;
-			}
-		}	
+		ob_start();
 		
 		include $template;
 		$out = @ob_get_contents();
+		
+		ob_end_clean();
 		
 		$load_cache = true;
 		if (!$view->is_valid && !$view->as_cache)
@@ -82,6 +79,8 @@ function get($part,$argument = null)
 		{
 			@unlink($file);
 			@unlink($file_var);
+			
+			$out = '<?php '.PHP_EOL.'if (!defined(\'FM_SECURITY\')) die();'.PHP_EOL.'?>'.$out;
 			
 			@file_put_contents($file,trim($out));
 			
@@ -96,8 +95,6 @@ EOL;
 			@file_put_contents($file_var,$out);	
 		}
 	}
-	
-	@ob_end_clean();
 	
 	if ($load_cache)
 		include $file;

@@ -3,7 +3,7 @@ if (!defined('FM_SECURITY')) die();
 
 function get($key)
 {
-	$return = fm::factory();
+	$return = fm::obj();
 	$return->value = $key;
 	
 	if (array_key_exists($key,$this->lang_string))

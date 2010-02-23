@@ -354,10 +354,11 @@ function boot()
 	if (!is_dir(FM_PATH_VAR_PRIVATE.FM_SITE_DIR.'compil'))
 		mkdir(FM_PATH_VAR_PRIVATE.FM_SITE_DIR.'compil/');
 	
-	if (array_key_exists('rebuild',$_GET)
-	 && array_key_exists('build',$c)
-	 && array_key_exists('key',$c['build'])
-	 && $_GET['rebuild']==$c['build']['key'])
+	if (array_key_exists('clear',$c)
+	 && array_key_exists($c['clear']['key'],$_GET)
+	 && ($_GET[$c['clear']['key']]==$c['clear']['build']
+	  || $_GET[$c['clear']['key']]==$c['clear']['all'])
+	 )
 	{
 		unlink($compil_file);
 	}
@@ -484,15 +485,6 @@ function boot()
 	foreach ($loadable_extension as $extension=>$data)
 	{
 		fm::$extension[$extension] = array('path'=>$data['path'],'object'=>call_user_func(array($extension,'factory')));
-	}
-	
-	$controller = route::factory()->getController();
-	
-	$view = $controller->startController();
-	
-	if (is_a($view,'view'))
-	{
-		$view->get('document');
 	}
 }
 

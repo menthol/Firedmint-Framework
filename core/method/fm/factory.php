@@ -3,11 +3,10 @@ if (!definied('FM_SECURITY')) die();
 
 static function factory()
 {
-	if (!is_a(self::$obj,get_called_class()))
+	$class = get_called_class();
+	if (!array_key_exists($class,fm::$obj) || !is_a(fm::$obj[$class],$class))
 	{
-		$class = get_called_class();
-		self::$obj = new $class();
+		fm::$obj[$class] = new $class();
 	}
-	
-	return self::$obj;
+	return fm::$obj[$class];
 }

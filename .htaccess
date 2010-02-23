@@ -30,20 +30,20 @@ DirectoryIndex index.php
   SetEnv FM_REWRITEURLS              1
 
   #RewriteBase /
-
-  # Protect system files from being viewed
-  RewriteRule ^(core/|var/private/|var/log/|public/private/) - [F,L]
-  RewriteRule ^site/[^\/]*/(extension/[^\/]*/)?(auth|class|component|controller|db|element|form|model|task|view)/ - [F,L]
   
-  # Only alow public directories to be public on templates directories
-  RewriteRule ^site/[^\/]*/template/[^\/]*/public/ - [S=1]
-  RewriteRule ^site/[^\/]*/template/[^\/]*/.{2,} - [F,L]
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^(core/public/|static/public/|var/public/|site/[a-zA-Z0-9\.-_]*/public/|site/[a-zA-Z0-9\.-_]*/extension/[a-zA-Z0-9\.-_]*/public/|site/[a-zA-Z0-9\.-_]*/template/[a-zA-Z0-9\.-_]*/public/) - [L]
   
   
-  # Rewrite URLs of the form 'x' to the form 'index.php/x'.
+  
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^(core/|site/|static/|var/) index.php/$1 [L,QSA]
+  
+  
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteCond %{REQUEST_URI} !=/favicon.ico
   RewriteRule ^(.*)$ index.php/$1 [L,QSA]
 </IfModule>
 

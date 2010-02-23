@@ -4,7 +4,7 @@ if (!defined('FM_SECURITY')) die();
 static function find($file)
 {
 	$file = trim($file);
-	$return = fm::factory();
+	$return = fm::obj();
 	$return->value = null;
 	if (strlen($file)>0)
 	{	
