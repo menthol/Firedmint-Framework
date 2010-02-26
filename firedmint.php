@@ -35,18 +35,17 @@ define('FM_PATH_PUBLIC',         'public/');
 define('FM_PATH_BUILD',          'build/'); // /var/build
 
 // public 
-define('FM_PATH_CSS',            'all/');
-define('FM_PATH_FLAG',           'auth/');
-define('FM_PATH_ICON',           'cache/');
-define('FM_PATH_IMG',            'component/');
-define('FM_PATH_JS',             'controller/');
-define('FM_PATH_MEDIA',          'db/');
+define('FM_PATH_CSS',            'css/');
+define('FM_PATH_FLAG',           'flag/');
+define('FM_PATH_ICON',           'icon/');
+define('FM_PATH_IMG',            'img/');
+define('FM_PATH_JS',             'js/');
+define('FM_PATH_MEDIA',          'media/');
 
 // private 
 define('FM_PATH_AUTH',           'auth/');
 define('FM_PATH_CACHE',          'cache/');
 define('FM_PATH_COMPONENT',      'component/');
-define('FM_PATH_CONTROLLER',     'controller/');
 define('FM_PATH_DB',             'db/');
 define('FM_PATH_DRIVER',         'driver/');
 define('FM_PATH_ELEMENT',        'element/');
