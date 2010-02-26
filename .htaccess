@@ -33,7 +33,7 @@ DirectoryIndex index.php
   
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
-  RewriteRule ^(core/public/|static/public/|var/public/|site/[a-zA-Z0-9\._-]*/public/|site/[a-zA-Z0-9\._-]*/extension/[a-zA-Z0-9_-]*/public/|site/[a-zA-Z0-9\._-]*/template/[a-zA-Z0-9\._-]*/public/) - [L]
+  RewriteRule ^(core/public/|static/public/|var/public/|site/[a-zA-Z0-9\._-]*/public/|site/[a-zA-Z0-9\._-]*/extension/[a-zA-Z0-9_-]*/public/|site/[a-zA-Z0-9\._-]*/template/[a-zA-Z0-9\_-]*/public/) - [L]
    
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
