@@ -12,10 +12,9 @@ function _boot()
 	
 	_class('log');
 	_class('cache',true);
+	_class('acl',true);
 	_class('user',true);
 	_class('auth',true);
-	_class('acl',true);
-	_class('controller');
 	_class('route');
 }
 

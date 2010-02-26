@@ -8,5 +8,6 @@ static function error($message)
 	array_shift($args);
 	if (count($args)==1)
 		$args = array_shift($args);
+	
 	log::add('error',$message,$args);
 }

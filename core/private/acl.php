@@ -1,13 +1,11 @@
 <?php 
 if (!defined('FM_SECURITY')) die();
 
-$acl['all']['route']['*/*']        = true;
-$acl['all']['route']['__fm/login'] = true;
-$acl['all']['route']['__fm/ajax']  = true;
-$acl['all']['route']['__fm/cron']  = true;
+$acl['group']['*']['route']['*/*']        = true;
+$acl['group']['*']['route']['__fm/login'] = true;
+$acl['group']['*']['route']['__fm/ajax']  = true;
+$acl['group']['*']['route']['__fm/cron']  = true;
 
-$acl['all']['failRoute']['*/*']    = array('__fm','login');
-
-$acl['group'] = array();
+$acl['group']['*']['failRoute']['*/*']    = array('__fm','login');
 
 $acl['user']  = array();
