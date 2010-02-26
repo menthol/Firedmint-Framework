@@ -5,14 +5,13 @@ function _boot()
 {
 	list($__config,$__extension) = _loadConfig();
 
-	define('FM_BUILD_ID',sha1(FM_BUILD_KEY.serialize($__extension)));
+	define('FM_BUILD_ID',sha1(FM_BUILD_KEY.var_export($__extension,true)));
 	
 	_class('kernel');
 	list(kernel::$config,kernel::$extension) = _loadConfig();
 	
 	_class('log');
 	_class('cache',true);
-	
 	_class('controller');
 	_class('route');
 }
@@ -553,23 +552,9 @@ function _createDir($path)
 	$path = dirname($path);
 	
 	if (is_dir($path))
-		return;
-	
-	$current_path = '';
-	if ($path[0]=='/')
-	{
-		$path = substr($path,1);
-		$current_path = '/';
-	}
-	
-	foreach (explode('/',$path) as $dir)
-	{
-		$current_path .= "$dir/";
-		if (!is_dir($current_path))
-		{
-			mkdir($current_path);
-		}
-	}
+		return true;
+		
+	return mkdir($path,0777,true);
 }
 
 function _deleteDir($dir) 
@@ -588,9 +573,7 @@ function _deleteDir($dir)
 			unlink("$dir/$file");  
 	}
 
-	closedir($dir_handle); 
-
-	@rmdir($dir); 
+	closedir($dir_handle);  
     
-	return; 
+	return @rmdir($dir);; 
 } 

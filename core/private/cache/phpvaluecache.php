@@ -15,8 +15,7 @@ class phpValueCache
 		else
 			$expire = time() + $cacheLifeTime;
 		
-		return file_put_contents($file,FM_PHP_STARTFILE.'$data = array('.var_export($expire,true).','.var_export($data,true).');');
-		
+		return file_put_contents($file,FM_PHP_STARTFILE.'$data = '.var_export(array(time(),$expire,$data),true).';',LOCK_EX);
 	}
 	
 	function get($type,$id)
@@ -26,8 +25,8 @@ class phpValueCache
 		if (file_exists($file))
 		{
 			include $file;
-			if (is_null($data[0]) || $data[0] > time())
-				return $data[1];
+			if (is_null($data[1]) || $data[1] > time())
+				return $data[2];
 			else
 				unlink($file);
 		}
@@ -42,13 +41,11 @@ class phpValueCache
 		return false;
 	}
 	
-	function clean($type)
+	function clean($type = null)
 	{
-	    _deleteDir(kernel::$config['cache']['var_private'].FM_SITE_DIR."phpvaluecache/$type/");
-	}
-	
-	function cleanAll()
-	{
-		_deleteDir(kernel::$config['cache']['var_private'].FM_SITE_DIR."phpvaluecache/");
+		if (strlen($type)>0)
+	    	return _deleteDir(kernel::$config['cache']['var_private'].FM_SITE_DIR."phpvaluecache/$type/");
+	    
+	    return _deleteDir(kernel::$config['cache']['var_private'].FM_SITE_DIR."phpvaluecache/");
 	}
 }
