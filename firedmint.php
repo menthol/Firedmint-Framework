@@ -71,9 +71,9 @@ define('FM_FILE_CONFIG',         'config');
 define('FM_FILE_EXTENSION',      'extension');
 define('FM_FILE_FUNCTION',       'function');
 define('FM_FILE_ROUTE',          'route');
+define('FM_FILE_USER',           'user');
 
 // others constants
-
 define('FM_BUILD_KEY',           sha1($_SERVER['SERVER_NAME'].$_SERVER['SERVER_PORT'].$_SERVER['SCRIPT_NAME']));
 
 // boot includes
