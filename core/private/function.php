@@ -12,10 +12,12 @@ function _boot()
 	
 	_class('log');
 	_class('cache',true);
+	_class('l10n',true);
 	_class('acl',true);
 	_class('user',true);
 	_class('auth',true);
-	_class('route');
+	_class('route',true);
+	list($__view,$__arguments) = route::getView(array_key_exists('PATH_INFO',$_SERVER)?$_SERVER['PATH_INFO']:'/',$_GET,kernel::$config['route']['magic_route']);
 }
 
 function _loadConfig()
@@ -34,7 +36,7 @@ function _loadConfig()
 	{
 		include $configCacheFile;
 		
-		if (!array_key_exists($config['clear']['key'],$_GET) || !in_array($_GET[$config['clear']['key']],array($config['clear']['config'],$config['clear']['all'])))
+		if (!_clear('config',$config['clear']))
 		{
 			if (!defined('FM_SITE_DIR'))
 				define('FM_SITE_DIR',$fm_site_dir);
@@ -391,9 +393,7 @@ function _class($class, $load = false)
 		
 		$buildClassFile = FM_PATH_VAR.FM_PATH_BUILD.FM_SITE_DIR.FM_BUILD_ID.".$class".FM_PHP_EXTENSION;
 		
-		if ((array_key_exists($config['clear']['key'],$_GET)
-		&& in_array($_GET[$config['clear']['key']],array($config['clear']['build'],$config['clear']['all'])))
-		|| !file_exists($buildClassFile))
+		if (_clear('build') || !file_exists($buildClassFile))
 			_build($class);
 			
 		include_once $buildClassFile;
@@ -612,4 +612,21 @@ function _ip()
 		}
 	}
 	return ($ip?$ip:$_SERVER['REMOTE_ADDR']);
+}
+
+function _clear($name,$config = null)
+{
+	if (!is_array($config) || !array_key_exists('key',$config))
+		if (class_exists('kernel'))
+			$config = kernel::$config['clear'];
+		else
+			return false;
+	
+	if (!array_key_exists($config['key'],$_GET))
+		return false;
+	
+	if (!array_key_exists($name,$config))
+		$config[$name] = $name;
+	
+	return preg_match("/^({$_GET[$config['key']]})$/",$name) || preg_match("/^({$_GET[$config['key']]})$/",'all');
 }

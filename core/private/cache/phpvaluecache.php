@@ -20,15 +20,18 @@ class phpValueCache
 	
 	function get($type,$id)
 	{
-		$file = kernel::$config['cache']['var_private'].FM_SITE_DIR."phpvaluecache/$type/".sha1($id).FM_PHP_EXTENSION;
-		
-		if (file_exists($file))
+		if (!_clear('value'))
 		{
-			include $file;
-			if (is_null($data[1]) || $data[1] > time())
-				return $data[2];
-			else
-				unlink($file);
+			$file = kernel::$config['cache']['var_private'].FM_SITE_DIR."phpvaluecache/$type/".sha1($id).FM_PHP_EXTENSION;
+			
+			if (file_exists($file))
+			{
+				include $file;
+				if (is_null($data[1]) || $data[1] > time())
+					return $data[2];
+				else
+					unlink($file);
+			}
 		}
 	}
 	

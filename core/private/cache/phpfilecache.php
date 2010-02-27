@@ -38,7 +38,6 @@ class phpFileCache
 			if (copy($originalPath,$cacheFile) && file_put_contents($file,FM_PHP_STARTFILE.'$data = '.var_export(array(time(),$expire,$cacheFile,$originalPath,$public),true).';',LOCK_EX))
 				return $cacheFile;
 		}
-		return false;
 	}
 	
 	function get($originalPath)
@@ -83,8 +82,6 @@ class phpFileCache
 		_createDir($file);
 		if (file_put_contents($cacheFile,$fileContent,LOCK_EX) && file_put_contents($file,FM_PHP_STARTFILE.'$data = '.var_export(array(time(),$expire,$cacheFile,null,$public),true).';',LOCK_EX))
 			return $cacheFile;
-	
-		return false;
 	}
 		
 	function getContent($id)

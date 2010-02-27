@@ -6,7 +6,7 @@ class arrayUser
 	static $user = array();
 	function __construct()
 	{
-		if (!is_array(arrayUser::$user = cache::$value->get('arrayuser','cached_user')))
+		if (_clear('user') || !is_array(arrayUser::$user = cache::$value->get('arrayuser','cached_user')))
 		{
 			// compile users
 			if (!is_array(arrayUser::$user = cache::$static->get('arrayuser','static_user')))

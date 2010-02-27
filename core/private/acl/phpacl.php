@@ -11,7 +11,7 @@ class phpAcl
 	
 	function update()
 	{
-		if (!is_array(phpAcl::$acl = cache::$value->get('phpacl','cached_acl')))
+		if (_clear('acl') || !is_array(phpAcl::$acl = cache::$value->get('phpacl','cached_acl')))
 		{
 			// compile acls 
 			if (!is_array(phpAcl::$acl = cache::$static->get('phpacl','static_acl')))

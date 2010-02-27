@@ -21,6 +21,18 @@ $c['cache'] = array(
 	'static_public'     => FM_PATH_STATIC.FM_PATH_PUBLIC,
 );
 
+$c['clear'] = array(
+	'key'               => '__clear',
+	'acl'               => 'acl',
+	'all'               => 'all',
+	'build'             => 'build',
+	'config'            => 'config',
+	'front'             => 'front',
+	'route'             => 'route',
+	'user'              => 'user',
+	'value'             => 'value',
+);
+
 $c['user'] = array(
 	'engine'            => 'arrayUser',
 	'cache_lifetime'	=> 20,
@@ -39,7 +51,15 @@ $c['acl'] = array(
 	'cache_lifetime'    => 1800,
 );
 
-
+$c['route'] = array(
+	'engine'            => 'phpRoute',
+	'cache_lifetime'    => 1800,
+	'404_route'         => array('404'),
+	'redirect_route'    => array('__redirect'),
+	'magic_route'       => false,
+	'default_extension' => 'html',
+	'show_extension'    => false,
+);
 
 
 
@@ -55,28 +75,12 @@ $c['l10n'] = array(
 	'local'             => 'en_US',
 );
 
-$c['route'] = array(
-	'default_route'     => array('error','404'),
-	'error_route'       => array('error'),
-	'redirect_route'    => array('redirect'),
-	'magic_route'       => false,
-	'default_extension' => 'html',
-	'show_extension'    => true,
-);
-
 $c['view'] = array(
 	'cache'             => 1800,
 	'template'          => null,
 );
 
-$c['clear'] = array(
-	'key'               => 'fm_clear',
-	'build'             => 'build',
-	'view'              => 'view',
-	'model'             => 'model',
-	'config'            => 'config',
-	'all'               => 'all',
-);
+
 
 $c['site'] = array(
 	'site-name'         => 'Default Website',
