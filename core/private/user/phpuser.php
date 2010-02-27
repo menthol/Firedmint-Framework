@@ -1,23 +1,23 @@
 <?php
 if (!defined('FM_SECURITY')) die();
 
-class arrayUser
+class phpUser
 {
 	static $user = array();
 	function __construct()
 	{
-		if (_clear('user') || !is_array(arrayUser::$user = cache::$value->get('arrayuser','cached_user')))
+		if (_clear('user') || !is_array(phpUser::$user = cache::$value->get('arrayuser','cached_user')))
 		{
 			// compile users
-			if (!is_array(arrayUser::$user = cache::$static->get('arrayuser','static_user')))
-				arrayUser::$user = array();
+			if (!is_array(phpUser::$user = cache::$static->get('arrayuser','static_user')))
+				phpUser::$user = array();
 			
 			$file = FM_PATH_SITE.FM_SITE_DIR.FM_PATH_PRIVATE.FM_FILE_USER.FM_PHP_EXTENSION;
 			if (file_exists($file))
 			{				
 				$user = array();
 				include $file;
-				arrayUser::$user += $user;
+				phpUser::$user += $user;
 			}
 			
 			$file = FM_PATH_SITE.FM_PATH_ALL.FM_PATH_PRIVATE.FM_FILE_USER.FM_PHP_EXTENSION;
@@ -25,7 +25,7 @@ class arrayUser
 			{
 				$user = array();
 				include $file;
-				arrayUser::$user += $user;
+				phpUser::$user += $user;
 			}
 			
 			list($config,$extension) = _loadConfig();
@@ -37,7 +37,7 @@ class arrayUser
 				{
 					$user = array();
 					include $path.FM_FILE_USER.FM_PHP_EXTENSION;
-					arrayUser::$user += $user;
+					phpUser::$user += $user;
 				}
 			}
 			
@@ -46,9 +46,9 @@ class arrayUser
 			{
 				$user = array();
 				include $file;
-				arrayUser::$user += $user;
+				phpUser::$user += $user;
 			}
-			cache::$value->set('arrayuser','cached_user',arrayUser::$user,kernel::$config['user']['cache_lifetime']);
+			cache::$value->set('arrayuser','cached_user',phpUser::$user,kernel::$config['user']['cache_lifetime']);
 		}
 	}
 	
@@ -59,17 +59,17 @@ class arrayUser
 	
 	function getPassword($login)
 	{
-		if ($this->userExists($login) && array_key_exists('password',arrayUser::$user[$login]))
-			return arrayUser::$user[$login]['password'];
+		if (user::userExists($login) && array_key_exists('password',phpUser::$user[$login]))
+			return phpUser::$user[$login]['password'];
 	}
 	
 	function getUser($login)
 	{
 		$user = user::anonymous();
 		
-		if ($this->userExists($login))
+		if (user::userExists($login))
 		{
-			$data = arrayUser::$user[$login];
+			$data = phpUser::$user[$login];
 			$user->name  = $login;
 			$user->id    = crc32($login);
 			$user->login = $login;

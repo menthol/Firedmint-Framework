@@ -63,9 +63,9 @@ class phpAcl
 			return phpAcl::$acl['user'][$user][$roleGroup][$role];
 		
 		if (!is_object($user = user::getUser($user)) || !isset($user->group))
-			return $this->all($roleGroup,$role);
+			return acl::all($roleGroup,$role);
 		
-		return $this->group($user->group,$roleGroup,$role);
+		return acl::group($user->group,$roleGroup,$role);
 	}
 	
 	function group($group,$roleGroup,$role)
@@ -73,7 +73,7 @@ class phpAcl
 		if (array_key_exists($group,phpAcl::$acl['group']) && array_key_exists($roleGroup,phpAcl::$acl['group'][$group]) && array_key_exists($role,phpAcl::$acl['group'][$group][$roleGroup]))
 			return phpAcl::$acl['group'][$group][$roleGroup][$role];
 		
-		return $this->all($roleGroup,$role);
+		return acl::all($roleGroup,$role);
 	}
 	
 	function all($roleGroup,$role)

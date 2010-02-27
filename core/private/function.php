@@ -6,6 +6,7 @@ function _boot()
 	list($__config,$__extension) = _loadConfig();
 
 	define('FM_BUILD_ID',sha1(FM_BUILD_KEY.var_export($__extension,true)));
+	define('FM_REQUEST_ID',sha1(FM_START_TIME._ip()));
 	
 	_class('kernel');
 	list(kernel::$config,kernel::$extension) = _loadConfig();

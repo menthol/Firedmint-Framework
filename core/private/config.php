@@ -28,13 +28,14 @@ $c['clear'] = array(
 	'build'             => 'build',
 	'config'            => 'config',
 	'front'             => 'front',
+	'l10n'              => 'l10n',
 	'route'             => 'route',
 	'user'              => 'user',
 	'value'             => 'value',
 );
 
 $c['user'] = array(
-	'engine'            => 'arrayUser',
+	'engine'            => 'phpUser',
 	'cache_lifetime'	=> 20,
 );
 
@@ -42,6 +43,7 @@ $c['auth'] = array(
 	'engine'            => 'digestAuth',
 );
 
+// --> l10n
 $c['digestAuth'] = array(
 	'realm'             => 'Restricted area',
 );
@@ -54,26 +56,29 @@ $c['acl'] = array(
 $c['route'] = array(
 	'engine'            => 'phpRoute',
 	'cache_lifetime'    => 1800,
-	'404_route'         => array('404'),
-	'redirect_route'    => array('__redirect'),
+	'404_route'         => '404',
+	'redirect_route'    => '__redirect',
 	'magic_route'       => false,
 	'default_extension' => 'html',
 	'show_extension'    => false,
 );
 
-
-
-
-
-
-
-
-
-
-
 $c['l10n'] = array(
-	'local'             => 'en_US',
+	'engine'            => 'phpl10n',
+	'cache_lifetime'    => 1800,
+	'default'           => 'en_US',
+	'parser'            => array('@'=>'magicL10n','%'=>'printf',),
 );
+
+
+
+
+
+
+
+
+
+
 
 $c['view'] = array(
 	'cache'             => 1800,
