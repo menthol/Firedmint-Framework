@@ -14,46 +14,17 @@ class phpAcl
 		if (_clear('acl') || !is_array(phpAcl::$acl = cache::$value->get('phpacl','cached_acl')))
 		{
 			// compile acls 
-			if (!is_array(phpAcl::$acl = cache::$static->get('phpacl','static_acl')))
-				phpAcl::$acl = array();
+			if (!is_array($__acl = cache::$static->get('phpacl','static_acl')))
+				$__acl = array();
 			
-			$file = FM_PATH_SITE.FM_SITE_DIR.FM_PATH_PRIVATE.FM_FILE_ACL.FM_PHP_EXTENSION;
-			if (file_exists($file))
-			{				
-				$acl = array();
-				include $file;
-				phpAcl::$acl = array_replace_recursive($acl,phpAcl::$acl);
-			}
-			
-			$file = FM_PATH_SITE.FM_PATH_ALL.FM_PATH_PRIVATE.FM_FILE_ACL.FM_PHP_EXTENSION;
-			if (file_exists($file))
+			foreach (_getPaths(FM_PATH_PRIVATE.FM_FILE_ACL.FM_PHP_EXTENSION) as $file)
 			{
 				$acl = array();
 				include $file;
-				phpAcl::$acl = array_replace_recursive($acl,phpAcl::$acl);
+				$__acl = array_replace_recursive($acl,$__acl);
 			}
-			
-			list($config,$extension) = _loadConfig();
-			
-			foreach ($extension as $ext=>$values)
-			{
-				$path = $values['path'];
-				if (file_exists($path.FM_FILE_ACL.FM_PHP_EXTENSION))
-				{
-					$acl = array();
-					include $path.FM_FILE_ACL.FM_PHP_EXTENSION;
-					phpAcl::$acl = array_replace_recursive($acl,phpAcl::$acl);
-				}
-			}
-			
-			$file = FM_PATH_CORE.FM_PATH_PRIVATE.FM_FILE_ACL.FM_PHP_EXTENSION;
-			if (file_exists($file))
-			{
-				$acl = array();
-				include $file;
-				phpAcl::$acl = array_replace_recursive($acl,phpAcl::$acl);
-			}
-			cache::$value->set('phpacl','cached_acl',phpAcl::$acl,kernel::$config['acl']['cache_lifetime']);
+			phpAcl::$acl = $__acl;
+			cache::$value->set('phpacl','cached_acl',$__acl,kernel::$config['acl']['cache_lifetime']);
 		}		
 	}
 		
@@ -61,6 +32,9 @@ class phpAcl
 	{
 		if (array_key_exists($user,phpAcl::$acl['user']) && array_key_exists($roleGroup,phpAcl::$acl['user'][$user]) && array_key_exists($role,phpAcl::$acl['user'][$user][$roleGroup]))
 			return phpAcl::$acl['user'][$user][$roleGroup][$role];
+		
+		if (array_key_exists($user,phpAcl::$acl['user']) && array_key_exists($roleGroup,phpAcl::$acl['user'][$user]) && array_key_exists('*',phpAcl::$acl['user'][$user][$roleGroup]))
+			return phpAcl::$acl['user'][$user][$roleGroup]['*'];
 		
 		if (!is_object($user = user::getUser($user)) || !isset($user->group))
 			return acl::all($roleGroup,$role);
@@ -73,6 +47,9 @@ class phpAcl
 		if (array_key_exists($group,phpAcl::$acl['group']) && array_key_exists($roleGroup,phpAcl::$acl['group'][$group]) && array_key_exists($role,phpAcl::$acl['group'][$group][$roleGroup]))
 			return phpAcl::$acl['group'][$group][$roleGroup][$role];
 		
+		if (array_key_exists($group,phpAcl::$acl['group']) && array_key_exists($roleGroup,phpAcl::$acl['group'][$group]) && array_key_exists('*',phpAcl::$acl['group'][$group][$roleGroup]))
+			return phpAcl::$acl['group'][$group][$roleGroup]['*'];
+		
 		return acl::all($roleGroup,$role);
 	}
 	
@@ -80,6 +57,9 @@ class phpAcl
 	{
 		if (array_key_exists('*',phpAcl::$acl['group']) && array_key_exists($roleGroup,phpAcl::$acl['group']['*']) && array_key_exists($role,phpAcl::$acl['group']['*'][$roleGroup]))
 			return phpAcl::$acl['group']['*'][$roleGroup][$role];
+		
+		if (array_key_exists('*',phpAcl::$acl['group']) && array_key_exists($roleGroup,phpAcl::$acl['group']['*']) && array_key_exists('*',phpAcl::$acl['group']['*'][$roleGroup]))
+			return phpAcl::$acl['group']['*'][$roleGroup]['*'];
 	}
 	
 	function set($category,$name,$roleGroup,$role,$value)
@@ -110,5 +90,22 @@ class phpAcl
 		$return = cache::$static->set('phpacl','static_acl',$_acl);
 		$this->update();
 		return $return;
+	}
+	
+	function routeControl($user,$route)
+	{
+		if (is_object($user))
+			if (property_exists($user,'login'))
+				$user = $user->login;
+			else
+				return $route;
+		
+		if (acl::user($user,'route',$route[0]))
+			return $route;
+		
+		if (is_array($return = acl::user($user,'failRoute',$route[0])))
+			return $return + $route;
+		
+		return $route;
 	}
 }

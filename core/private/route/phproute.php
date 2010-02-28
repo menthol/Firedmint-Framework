@@ -19,144 +19,137 @@ class phpRoute
 			list(phpRoute::$path,phpRoute::$inverse,phpRoute::$regex) = $routes;
 		}
 		else
-		{
-			// compile routes 
-			list($config,$extension) = _loadConfig();
+		{			
+			if (!is_array($__path = cache::$static->get('phproute','static_routes')))
+				$__path = array();
 			
-			$file = array();
-			$file[] = FM_PATH_SITE.FM_PATH_PRIVATE.FM_SITE_DIR.FM_FILE_ROUTE;
-			$file[] = FM_PATH_SITE.FM_PATH_PRIVATE.FM_PATH_ALL.FM_FILE_ROUTE;
-	
-			foreach($extension as $data)
-				$file[] = $data['path'].FM_PATH_PRIVATE.FM_FILE_ROUTE;
-			
-			$file[] = FM_PATH_CORE.FM_PATH_PRIVATE.FM_FILE_ROUTE;
-			
-			if (!is_array($r = cache::$static->get('phproute','static_routes')))
-				$r = array();
-			
-			foreach ($file as $path)
+			foreach (_getPaths(FM_PATH_PRIVATE.FM_FILE_ROUTE.FM_PHP_EXTENSION) as $file)
 			{
-				$path .= FM_PHP_EXTENSION;
-				if (file_exists($path))
-				{
-					$route = array();
-					include $path;
-					$r += $route;
-				}
+				$route = array();
+				include $file;
+				$__path += $route;
 			}
-			
-			phpRoute::$path = $r;
 	
-			$rr = array();
-			$re = array();
-			foreach (phpRoute::$path as $url=>$tmp_route)
+			$__inverse = array();
+			$__regex = array();
+			foreach ($__path as $url=>$route)
 			{
-				list($view,$args,$vars) = $tmp_route + array(null,array(),array());
+				$__view = array_shift($route);
+				$__status = 200; # HTTP/1.1 200 OK
+				$__arguments = array();
+				$__extensions = '[a-z0-9]*';
 				
-				$args += array('extension'=>'[a-z0-9]*');
+				foreach ($route as $value)
+					if (is_array($value))
+						$__arguments = $value;
+					elseif (!is_string($value) && is_numeric($value) && in_array("$value",header::$statusCodes))
+						$__status = $value;
+					elseif (is_string($value))
+						$__extensions = $value;
 				
-				$matches = array();
 				preg_match_all('/%([0-9a-z-_]+)%/i',$url,$matches);
 				
-				if (count($matches[0])>0)
+				if (count($matches[1])>0)
 				{
 					$patterns = array();
 					$replacements = array();
 					$arguments = array();
 					foreach ($matches[1] as $var)
 					{
-						$arguments[$var] = '.+';
-						if (array_key_exists($var,$args))
-							$arguments[$var] = $args[$var];
+						if (!(array_key_exists($var,$__arguments) && $arguments[$var]=$__arguments[$var]))	
+							$arguments[$var] = '.+';
 						
-						$pattern = $arguments[$var];
+						unset($__arguments[$var]);
+						
 						$patterns[]     = "/%{$var}%/";
-						$replacements[] = "({$pattern})";
+						$replacements[] = "({$arguments[$var]})";
 					}
 					$regex = preg_replace($patterns, $replacements, $url);
 					if (strpos($regex,'%')===false)
 					{
-						
-						$arguments += array('extension'=>$args['extension']);
-						
-						$re['#^'.$regex.'$#'] = array($view,$arguments,$vars,$url,'#^'.$regex.'$#');
-						$rr[$view][$url] = $arguments;
-						phpRoute::$path[$url] = array($view,$arguments,$vars,$url,'#^'.$regex.'$#');
+						$__regex['#^'.$regex.'$#'] = array($__view,$__status,$__extensions,$arguments,$__arguments,$url,'#^'.$regex.'$#');
+						$__inverse[$__view][$url] = array($__view,$__status,$__extensions,$arguments,$__arguments,$url,'#^'.$regex.'$#');
+						$__path[$url] = array($__view,$__status,$__extensions,$arguments,$__arguments,$url,'#^'.$regex.'$#');
 					}
 				}
 				else
 				{
 					if (strpos($url,'%')===false)
 					{
-						$re['#^'.$url.'$#'] = array($view,array('extension'=>'[a-z0-9]*'),$vars,$url,'#^'.$url.'$#');
-						$rr[$view][$url] = array('extension'=>'[a-z0-9]*');
-						phpRoute::$path[$url] = array($view,array('extension'=>'[a-z0-9]*'),$vars,$url,'#^'.$url.'$#');
+						$__regex['#^'.$url.'$#'] = array($__view,$__status,$__extensions,array(),$__arguments,$url,'#^'.$url.'$#');
+						$__inverse[$__view][$url] = array($__view,$__status,$__extensions,array(),$__arguments,$url,'#^'.$url.'$#');
+						$__path[$url] = array($__view,$__status,$__extensions,array(),$__arguments,$url,'#^'.$url.'$#');
 					}
 				}
 			}
-			phpRoute::$inverse = $rr;
-			phpRoute::$regex = $re;
+			
+			phpRoute::$path    = $__path;
+			phpRoute::$inverse = $__inverse;
+			phpRoute::$regex   = $__regex;
+			
 			cache::$value->set('phproute','cached_routes',array(phpRoute::$path,phpRoute::$inverse,phpRoute::$regex),kernel::$config['route']['cache_lifetime']);
 		}
 	}
 	
-	function getView($url,$getArgs,$magicRoute)
+	function getView($url,$httpGet,$magicRoute)
 	{	
-		$routeKey = $url.var_export($getArgs,true).$magicRoute;
+		$routeKey = $url.var_export($httpGet,true).$magicRoute;
 		if (!_clear('route') && is_array($route = cache::$value->get('phproute',$routeKey)))
-		{
 			return $route;
-		}
 		else
 		{
 			$matches = array();
 			$extension = null;
-			if (preg_match('/^(.*)\.([0-9a-z]+)$/i',$url,$matches))
+
+			if (array_key_exists('extension',$path_parts = pathinfo($url)))
 			{
-				$url = $matches[1];
-				$extension = strtolower($matches[2]);
+				$url = substr($url,0,-1-strlen($path_parts['extension']));
+				$extension = $path_parts['extension'];
 			}
-	
-			$path_keys = array_filter(array_keys(phpRoute::$regex),create_function('$arg','return preg_match($arg,\''.$url.'\') && preg_match(\'#^(\'.phpRoute::$regex[$arg][1][\'extension\'].\')$#\',\''.$extension.'\');'));
+			
+			$path_keys = array();
+			foreach (array_keys(phpRoute::$regex) as $regex)
+				if (preg_match($regex,$url) && preg_match('#^('.phpRoute::$regex[$regex][2].')$#',$extension))
+					$path_keys[] = $regex; 
+			
+			$arguments = array();
+			$status = 200;
 			
 			if (count($path_keys)>0)
 			{
-				list($view,$args,$vars,$path,$regex) = phpRoute::$regex[current($path_keys)];
-				
-				$matches = array();
-				
+				list($view,$status,$extensions,$urlArguments,$routeArguments,$route,$regex) = phpRoute::$regex[$path_keys[0]];
 				preg_match($regex,$url,$matches);
-				
-				$arguments = array();
-				
-				if ($matches>1)
+				if (count($matches)>1)
 				{
 					array_shift($matches);
-					foreach ($args as $key=>$regex)
-					{
+					foreach ($urlArguments as $key=>$regex)
 						$arguments[$key] = array_shift($matches); 
-					}
 				}
-				
-				$arguments = array('extension'=>$extension) + $arguments + $vars + $getArgs;
-				
+				$arguments += $routeArguments + $httpGet;
+				$params = array('url'=>$url,'view'=>$view,'params'=>array());
 			}
-			elseif ($magicRoute==true && count(explode('/',$url))>=3)
+			elseif ($magicRoute==true && $url!='/')
 			{
 				$args = explode('/',$url);
 				array_shift($args);
 				$view = array_shift($args);
-				$arguments = array('extension'=>$extension) + $getArgs;
+				$arguments = array('params'=>$args) + $httpGet;
+				$params = array('url'=>$url,'view'=>$view,'params'=>$args);
 			}
 			else
 			{
 				$view = kernel::$config['route']['404_route'];
-				$arguments = array('extension'=>$extension) + $getArgs;
+				$status = 404;
+				$args = explode('/',$url);
+				array_shift($args);
+				$_view = array_shift($args);
+				$arguments = $httpGet;
+				$params = array('url'=>$url,'view'=>$_view,'params'=>$args);
 			}
 			
-			$route = array($view,$arguments);
+			$route = array($view,$status,$extension,$arguments,$params);
 			cache::$value->set('phproute',$routeKey,$route,kernel::$config['route']['cache_lifetime']);
+			
 			return $route;
 		}
 	}

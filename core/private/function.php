@@ -16,9 +16,18 @@ function _boot()
 	_class('l10n',true);
 	_class('acl',true);
 	_class('user',true);
+	_class('header');
 	_class('auth',true);
 	_class('route',true);
-	list($__view,$__arguments) = route::getView(array_key_exists('PATH_INFO',$_SERVER)?$_SERVER['PATH_INFO']:'/',$_GET,kernel::$config['route']['magic_route']);
+	
+	$httpGet = $_GET;
+	if (array_key_exists(kernel::$config['clear']['key'],$_GET))
+		unset($httpGet[kernel::$config['clear']['key']]);
+	
+	$route = route::getView(array_key_exists('PATH_INFO',$_SERVER)?$_SERVER['PATH_INFO']:'/',$httpGet,kernel::$config['route']['magic_route']);
+	$route = acl::routeControl(user::$current,$route);
+		
+	user::save();
 }
 
 function _loadConfig()
@@ -386,6 +395,38 @@ function _loadConfig()
 	return array($c,$extension);
 }
 
+function _getPaths($file = '.')
+{
+	static $paths = array();
+	
+	if (array_key_exists($file,$paths))
+		return $paths[$file];
+	
+	if (!array_key_exists('.',$paths))
+	{
+		list($config,$extension) = _loadConfig();
+				
+		$paths['.'] = array();
+		$paths['.'][] = FM_PATH_SITE.FM_SITE_DIR;
+		$paths['.'][] = FM_PATH_SITE.FM_PATH_ALL;
+	
+		foreach($extension as $data)
+			$paths['.'][] = $data['path'];
+		
+		$paths['.'][] = FM_PATH_CORE;
+	}
+	
+	if ($file=='.')
+		return $paths['.'];
+	
+	$paths[$file] = array();
+	foreach ($paths['.'] as $path)
+		if (file_exists($path.$file))
+			$paths[$file][] = $path.$file;
+	
+	return $paths[$file];
+}
+
 function _class($class, $load = false)
 {
 	if (!class_exists($class,false))
@@ -439,8 +480,9 @@ function _find($file,$forced = false)
 	
 	$paths[] = FM_PATH_SITE.FM_SITE_DIR.$file;
 	$paths[] = FM_PATH_SITE.FM_PATH_ALL.$file;
-	foreach (array_keys(kernel::$extension) as $ext)
-		$paths[] = kernel::$extension[$ext]['path'].$file;
+	if (class_exists('kernel'))
+		foreach (array_keys(kernel::$extension) as $ext)
+			$paths[] = kernel::$extension[$ext]['path'].$file;
 	
 	$paths[] = FM_PATH_CORE.$file;
 	
@@ -481,11 +523,11 @@ function _build($class)
 			$dir_handle = @opendir($dir);
 			while (($file = readdir($dir_handle)) !== false) 
 			{
-				if (preg_match('/^([a-z_][a-z0-9_]*)\.var\.php$/',$file,$matches))
+				if (preg_match('/^([a-z_][a-z0-9_]*)\.var\.php$/i',$file,$matches))
 				{
 					$files['var'][$matches[1]] = $dir.$file;
 				}
-				elseif (preg_match('/^([a-z_][a-z0-9_]*)\.method\.php$/',$file,$matches))
+				elseif (preg_match('/^([a-z_][a-z0-9_]*)\.method\.php$/i',$file,$matches))
 				{
 					$files['method'][$matches[1]] = $dir.$file;
 				}
@@ -503,7 +545,7 @@ function _build($class)
 		{
 			$file_content =  file_get_contents($file);
 			$matches = array();
-			if (preg_match('/(static|var|public|protected|private)(.*;)/',$file_content,$matches))
+			if (preg_match('/(static|var|public|protected|private)(.*;)/is',$file_content,$matches))
 				$out .= $matches[0].PHP_EOL;
 		}
 	}
@@ -514,7 +556,7 @@ function _build($class)
 		{
 			$file_content =  file_get_contents($file);
 			$matches = array();
-			if (preg_match('/((static|function|public|protected|private).*})[^}]*$/xs',$file_content,$matches))
+			if (preg_match('/((static|function|public|protected|private).*})[^}]*$/is',$file_content,$matches))
 				$out .= $matches[1].PHP_EOL;
 		}
 	}
@@ -525,28 +567,31 @@ function _build($class)
 }
 
 function _errorHandler($errno, $errstr, $errfile, $errline) {
-	switch ($errno) {
-		case E_ERROR:
-		case E_USER_ERROR:
-				$errors = "Fatal Error";
-				log::error($errstr,array('no'=>$errno,'type'=>$error,'file'=>$errfile,'line'=> $errline));
-				return false;
-			break;
-		case E_NOTICE:
-		case E_USER_NOTICE:
-				$errors = "Notice";
-			break;
-		case E_WARNING:
-		case E_USER_WARNING:
-				$errors = "Warning";
-			break;
-
-		default:
-				$errors = "Unknown";
-		break;
-	}
+	if (class_exists('log'))
+	{
+		switch ($errno) {
+			case E_ERROR:
+			case E_USER_ERROR:
+					$errors = "Fatal Error";
+					log::error($errstr,array('no'=>$errno,'type'=>$error,'file'=>$errfile,'line'=> $errline));
+					return false;
+				break;
+			case E_NOTICE:
+			case E_USER_NOTICE:
+					$errors = "Notice";
+				break;
+			case E_WARNING:
+			case E_USER_WARNING:
+					$errors = "Warning";
+				break;
 	
-	log::notice($errstr,array('no'=>$errno,'type'=>$errors,'file'=>$errfile,'line'=> $errline));
+			default:
+					$errors = "Unknown";
+			break;
+		}
+		
+		log::notice($errstr,array('no'=>$errno,'type'=>$errors,'file'=>$errfile,'line'=> $errline));
+	}
 	return false;
 }
 
@@ -630,4 +675,26 @@ function _clear($name,$config = null)
 		$config[$name] = $name;
 	
 	return preg_match("/^({$_GET[$config['key']]})$/",$name) || preg_match("/^({$_GET[$config['key']]})$/",'all');
+}
+
+function _t($lang,$key,$args = array(),$getValue = false)
+{
+	if (!class_exists('l10n') || !($value = l10n::get($lang,$key,$args)))
+		$value = $key;
+	
+	if ($getValue)
+		return $value;
+	
+	return '<?php print '.var_export($value).'; ?>';
+}
+
+function _l($key,$args = array(),$getValue = false)
+{
+	if (class_exists('l10n'))
+		return _t(l10n::$lang,$key,$args,$getValue);
+	
+	if ($getValue)
+		return $key;
+	
+	return '<?php print '.var_export($key).'; ?>';
 }

@@ -6,10 +6,10 @@ class phpUser
 	static $user = array();
 	function __construct()
 	{
-		if (_clear('user') || !is_array(phpUser::$user = cache::$value->get('arrayuser','cached_user')))
+		if (_clear('user') || !is_array(phpUser::$user = cache::$value->get('phpuser','cached_user')))
 		{
 			// compile users
-			if (!is_array(phpUser::$user = cache::$static->get('arrayuser','static_user')))
+			if (!is_array(phpUser::$user = cache::$static->get('phpuser','static_user')))
 				phpUser::$user = array();
 			
 			$file = FM_PATH_SITE.FM_SITE_DIR.FM_PATH_PRIVATE.FM_FILE_USER.FM_PHP_EXTENSION;
@@ -48,13 +48,13 @@ class phpUser
 				include $file;
 				phpUser::$user += $user;
 			}
-			cache::$value->set('arrayuser','cached_user',phpUser::$user,kernel::$config['user']['cache_lifetime']);
+			cache::$value->set('phpuser','cached_user',phpUser::$user,kernel::$config['user']['cache_lifetime']);
 		}
 	}
 	
 	function userExists($login)
 	{
-	 	return array_key_exists($login,self::$user);
+	 	return array_key_exists($login,phpUser::$user);
 	}
 	
 	function getPassword($login)
@@ -78,8 +78,26 @@ class phpUser
 				unset($data['password']);
 			
 			foreach ($data as $key=>$value)
-				$user->$key = $value;
+				$user->{$key} = $value;
 		}
 		return $user;
+	}
+	
+	function userSave($user)
+	{
+		if (!property_exists($user,'login') || empty($user->login) || $user->login == user::anonymous()->login)
+			return;
+		
+		if (!user::userExists($user->login))
+			foreach (user::anonymous() as $key=>$value)
+				phpUser::$user[$user->login][$key] = $value;
+		
+		if (!array_key_exists('id',phpUser::$user[$user->login]))
+			phpUser::$user[$user->login]['id'] = crc32($user->login);
+		
+		foreach ($user as $key=>$value)
+			phpUser::$user[$user->login][$key] = $value;
+			
+		return cache::$static->set('phpuser','static_user',phpUser::$user);
 	}
 }

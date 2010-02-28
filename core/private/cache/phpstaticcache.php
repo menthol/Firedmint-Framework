@@ -18,7 +18,7 @@ class phpStaticCache
 		if (file_exists($file))
 		{
 			include $file;
-			return $data[2];
+			return $data[1];
 		}
 	}
 	

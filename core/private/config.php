@@ -41,11 +41,7 @@ $c['user'] = array(
 
 $c['auth'] = array(
 	'engine'            => 'digestAuth',
-);
-
-// --> l10n
-$c['digestAuth'] = array(
-	'realm'             => 'Restricted area',
+	'max_idle_time'     => 1800,
 );
 
 $c['acl'] = array(
@@ -56,8 +52,7 @@ $c['acl'] = array(
 $c['route'] = array(
 	'engine'            => 'phpRoute',
 	'cache_lifetime'    => 1800,
-	'404_route'         => '404',
-	'redirect_route'    => '__redirect',
+	'404_route'         => '__404',
 	'magic_route'       => false,
 	'default_extension' => 'html',
 	'show_extension'    => false,
@@ -67,7 +62,7 @@ $c['l10n'] = array(
 	'engine'            => 'phpl10n',
 	'cache_lifetime'    => 1800,
 	'default'           => 'en_US',
-	'parser'            => array('@'=>'magicL10n','%'=>'printf',),
+	'parser'            => array('%'=>'printf','default'=>'printf'),
 );
 
 
@@ -88,6 +83,5 @@ $c['view'] = array(
 
 
 $c['site'] = array(
-	'site-name'         => 'Default Website',
 	'charset'           => 'UTF-8',
 );
