@@ -8,17 +8,19 @@ function _boot()
 	define('FM_BUILD_ID',sha1(FM_BUILD_KEY.var_export($__extension,true)));
 	define('FM_REQUEST_ID',sha1(FM_START_TIME._ip()));
 	
-	_class('kernel');
+	_class('kernel',false);
 	list(kernel::$config,kernel::$extension) = _loadConfig();
 	
 	_class('log');
-	_class('cache',true);
-	_class('l10n',true);
-	_class('acl',true);
-	_class('user',true);
+	_class('cache');
+	_class('l10n');
+	_class('acl');
+	_class('user');
 	_class('header');
-	_class('auth',true);
-	_class('route',true);
+	_class('auth');
+	_class('route');
+	_class('template',false);
+	_class('view',false);
 	
 	$httpGet = $_GET;
 	if (array_key_exists(kernel::$config['clear']['key'],$_GET))
@@ -26,7 +28,12 @@ function _boot()
 	
 	$route = route::getView(array_key_exists('PATH_INFO',$_SERVER)?$_SERVER['PATH_INFO']:'/',$httpGet,kernel::$config['route']['magic_route']);
 	$route = acl::routeControl(user::$current,$route);
-		
+	
+	return view::start($route);
+}
+
+function _shutdown()
+{
 	user::save();
 }
 
@@ -427,7 +434,7 @@ function _getPaths($file = '.')
 	return $paths[$file];
 }
 
-function _class($class, $load = false)
+function _class($class, $load = true)
 {
 	if (!class_exists($class,false))
 	{
@@ -449,7 +456,7 @@ function _class($class, $load = false)
 	}
 }
 
-function _subClass($parrent,$class,$load = false)
+function _subClass($parrent,$class,$load = true)
 {
 	$parrent = strtolower($parrent);
 	$class = strtolower($class);
@@ -677,24 +684,40 @@ function _clear($name,$config = null)
 	return preg_match("/^({$_GET[$config['key']]})$/",$name) || preg_match("/^({$_GET[$config['key']]})$/",'all');
 }
 
-function _t($lang,$key,$args = array(),$getValue = false)
+function _t($lang,$key,$args = array(),$return = false)
 {
 	if (!class_exists('l10n') || !($value = l10n::get($lang,$key,$args)))
 		$value = $key;
 	
-	if ($getValue)
+	if ($return)
 		return $value;
 	
-	return '<?php print '.var_export($value).'; ?>';
+	return _print($value);
 }
 
-function _l($key,$args = array(),$getValue = false)
+function _l($key,$args = array(),$return = false)
 {
 	if (class_exists('l10n'))
-		return _t(l10n::$lang,$key,$args,$getValue);
+		return _t(l10n::$lang,$key,$args,$return);
 	
-	if ($getValue)
+	if ($return)
 		return $key;
 	
-	return '<?php print '.var_export($key).'; ?>';
+	return _print($key);
+}
+
+function _print($value,$return = false)
+{
+	if ($return)
+		return _echo($value,true);
+		
+	return print _echo($value,true);
+}
+
+function _echo($value,$return = false)
+{
+	if ($return)
+		return '<?php print '.var_export($value).'; ?>';
+		
+	echo '<?php print '.var_export($value).'; ?>';
 }

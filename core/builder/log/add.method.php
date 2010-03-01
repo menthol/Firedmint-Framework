@@ -10,8 +10,8 @@ static function add($type,$message,$arguments = array())
 	);
 	if (preg_match('/^('.kernel::$config['log']['hard_log'].')$/',$type))
 	{
-		$logfile = kernel::$config['log']['path'].substr(FM_SITE_DIR,0,-1).'_'.date('Y-m').'.log';
+		$logfile = kernel::$config['log']['path'].FM_PATH_LOG.substr(FM_SITE_DIR,0,-1).'_'.date('Y-m').'.log';
 		_createDir($logfile);
-		error_log(date('[d-m-Y h:i:s]')."[$type] $message".PHP_EOL.(kernel::$config['log']['log_args']?serialize($arguments).PHP_EOL:null), 3, $logfile);
+		error_log(date('[d-m-Y h:i:s]')."[$type]["._ip()."] $message".PHP_EOL.(kernel::$config['log']['log_args']?serialize($arguments).PHP_EOL:null), 3, $logfile);
 	}
 }

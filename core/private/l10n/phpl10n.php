@@ -34,7 +34,7 @@ class phpL10n
 			$lang_config = kernel::$config['l10n']['default'];
 			foreach (_getPaths() as $path)
 			{
-				$_path = $path.FM_PATH_L10N.strtolower($lang_config).FM_PHP_EXTENSION;
+				$_path = $path.FM_PATH_PRIVATE.FM_PATH_L10N.strtolower($lang_config).FM_PHP_EXTENSION;
 				if (file_exists($_path))
 				{
 					$l10n = array();
@@ -42,7 +42,7 @@ class phpL10n
 					$__l10n += $l10n;
 				}
 
-				$_path = $path.FM_PATH_L10N.substr(strtolower($lang_config),0,strpos($lang_config,'_')).FM_PHP_EXTENSION;
+				$_path = $path.FM_PATH_PRIVATE.FM_PATH_L10N.substr(strtolower($lang_config),0,strpos($lang_config,'_')).FM_PHP_EXTENSION;
 				if (file_exists($_path))
 				{
 					$l10n = array();
@@ -51,6 +51,7 @@ class phpL10n
 				}
 			}
 			phpL10n::$l10n[$lang] = $__l10n;
+			
 			cache::$value->set('phpl10n',$lang,$__l10n,kernel::$config['l10n']['cache_lifetime']);
 		}
 	}

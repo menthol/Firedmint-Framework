@@ -5,10 +5,9 @@ static function anonymous()
 {
 	$user        = new stdClass();
 	$user->data  = array();
-	$user->group = null;
-	$user->id    = 0;
+	$user->group = 'anonymous';
 	$user->ip    = _ip();
 	$user->login = 'anonymous';
-	$user->name  = null;
+	$user->name  = _l('anonymous',null,true);
 	return $user;
 }

@@ -65,23 +65,12 @@ $c['l10n'] = array(
 	'parser'            => array('%'=>'printf','default'=>'printf'),
 );
 
-
-
-
-
-
-
-
-
-
-
 $c['view'] = array(
-	'cache'             => 1800,
+	'cache_lifetime'    => 1800,
+	'compilator'		=> array('php'=>'phpTemplate'),
 	'template'          => null,
 );
 
-
-
-$c['site'] = array(
-	'charset'           => 'UTF-8',
+$c['header'] = array(
+	'generator'         => 'Firedmint '.FM_VERSION,
 );

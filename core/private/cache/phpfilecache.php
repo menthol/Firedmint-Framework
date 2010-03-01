@@ -33,6 +33,9 @@ class phpFileCache
 			else
 				$expire = time() + $cacheLifeTime;
 			
+			cache::informExpire($expire);
+			cache::informLastUpdate(time());
+			
 			_createDir($cacheFile);
 			_createDir($file);
 			if (copy($originalPath,$cacheFile) && file_put_contents($file,FM_PHP_STARTFILE.'$data = '.var_export(array(time(),$expire,$cacheFile,$originalPath,$public),true).';',LOCK_EX))
@@ -47,7 +50,13 @@ class phpFileCache
 		{
 			include $file;
 			if ((is_null($data[1]) || $data[1] > time()) && file_exists($data[1]))
+			{
+				if ($data[1] > time())
+					cache::informExpire($data[1]);
+				
+				cache::informLastUpdate($data[0]);
 				return $data[2];
+			}
 			else
 			{
 				@unlink($data[2]);

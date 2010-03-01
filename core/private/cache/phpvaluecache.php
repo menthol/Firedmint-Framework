@@ -15,6 +15,9 @@ class phpValueCache
 		else
 			$expire = time() + $cacheLifeTime;
 		
+		cache::informExpire($expire);
+		cache::informLastUpdate(time());
+		
 		return file_put_contents($file,FM_PHP_STARTFILE.'$data = '.var_export(array(time(),$expire,$data),true).';',LOCK_EX);
 	}
 	
@@ -28,7 +31,13 @@ class phpValueCache
 			{
 				include $file;
 				if (is_null($data[1]) || $data[1] > time())
+				{
+					if ($data[1] > time())
+						cache::informExpire($data[1]);
+					
+					cache::informLastUpdate($data[0]);
 					return $data[2];
+				}
 				else
 					unlink($file);
 			}

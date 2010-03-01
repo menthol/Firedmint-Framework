@@ -80,5 +80,11 @@ define('FM_BUILD_KEY',           sha1($_SERVER['SERVER_NAME'].$_SERVER['SERVER_P
 require_once FM_PATH_CORE.FM_PATH_PRIVATE.FM_FILE_COMPATIBILITY.FM_PHP_EXTENSION;
 require_once FM_PATH_CORE.FM_PATH_PRIVATE.FM_FILE_FUNCTION.FM_PHP_EXTENSION;
 
-// boot firedmint
-_boot();
+// Firedmint Live sequance
+$__content = _boot();
+ob_end_clean();
+header::send($__content);
+echo $__content;
+ob_start();
+_shutdown();
+ob_end_clean();

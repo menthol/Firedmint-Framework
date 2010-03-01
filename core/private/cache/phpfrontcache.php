@@ -3,77 +3,114 @@ if (!defined('FM_SECURITY')) die();
 
 class phpFrontCache
 {
-	function set($phpFile,$arguments = array(),$cacheLifeTime = false)
+	function set($phpFile,$view = null)
 	{
 		if ($phpFile[0]=='/')
 			$phpFile = substr($phpFile,1);
 		
-		if (file_exists($phpFile))
-		{	
-			$phpFileDir = basename(str_replace('/','-',$phpFile),FM_PHP_EXTENSION);
-			
-			$file = kernel::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($arguments,true)).FM_PHP_EXTENSION;
-			$filePart = kernel::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($arguments,true)).'.part.'.FM_PHP_EXTENSION;
-			
-			if (file_exists($file))
-			{
-				include $file;
-				@unlink($data[2]);
-			}
-			
-			$content = $this->execute($phpFile,&$arguments,&$cacheLifeTime);
-			if ($cacheLifeTime===false)
-				$cacheLifeTime = kernel::$config['cache']['file_lifetime'];
-			
-			if ($cacheLifeTime===null)
-				$expire = null;
-			else
-				$expire = time() + $cacheLifeTime;	
-			
-			_createDir($filePart);
-			_createDir($file);
-			if (file_put_contents($filePart,$content,LOCK_EX) && file_put_contents($file,FM_PHP_STARTFILE.'$data = '.var_export(array(time(),$expire,$filePart,$arguments,$cacheLifeTime),true).';',LOCK_EX))
-				return $filePart;
+		if ($view==null)
+			$view = _class('view');
+		
+		if (property_exists($view,'environment'))
+			unset($view->environment);
+		
+		if (property_exists($view,'extension'))
+			unset($view->extension);
+	
+		$phpFileDir = basename(str_replace('/','-',$phpFile),FM_PHP_EXTENSION);
+		$file = kernel::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($view,true)).FM_PHP_EXTENSION;
+		$filePart = kernel::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($view,true)).'.part'.FM_PHP_EXTENSION;
+		
+		if (!file_exists($phpFile))
+			return;
+		
+		$content = $this->execute($phpFile,&$view);
+		
+		if (!property_exists($view,'cache'))
+			$view->cache = kernel::$config['cache']['file_lifetime'];
+		
+		$expire = time() + $view->cache; 
+		
+		cache::informExpire($expire);
+		cache::informLastUpdate(time());
+		
+		_createDir($filePart);
+		_createDir($file);
+		
+		if (file_exists($file))
+		{
+			@include $file;
+			@unlink($file);
+			@unlink($data[2]);
 		}
+		file_put_contents($filePart,$content,LOCK_EX);
+		file_put_contents($file,FM_PHP_STARTFILE.'$data = '.var_export(array(time(),$expire,$filePart,$view),true).';',LOCK_EX);
+		
+		return $this->execute($filePart,$view);
 	}
 	
-	function get($phpFile,$arguments = array())
+	function get($phpFile,$view = null)
 	{
-		if (!_clear('front'))
+		if (_clear('front'))
+			return $this->set($phpFile,$view);
+		
+		if ($phpFile[0]=='/')
+			$phpFile = substr($phpFile,1);
+		
+		if ($view==null)
+			$view = _class('view');
+		
+		if (property_exists($view,'environment'))
+			unset($view->environment);
+		
+		if (property_exists($view,'extension'))
+			unset($view->extension);
+		
+		$phpFileDir = basename(str_replace('/','-',$phpFile),FM_PHP_EXTENSION);
+		$file = kernel::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($view,true)).FM_PHP_EXTENSION;
+		
+		if (!file_exists($file))
+			return $this->set($phpFile,$view);	
+		
+		include $file;
+		
+		if (is_null($data[1]) || $data[1] > time())
 		{
-			if ($phpFile[0]=='/')
-				$phpFile = substr($phpFile,1);
+			if ($data[1] > time())
+				cache::informExpire($data[1]);
 			
-			if (file_exists($phpFile))
-			{	
-				$phpFileDir = basename(str_replace('/','-',$phpFile),FM_PHP_EXTENSION);
-				
-				$file = kernel::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($arguments,true)).FM_PHP_EXTENSION;
-				
-				if (file_exists($file))
-				{
-					include $file;
-					if (is_null($data[1]) || $data[1] > time())
-						return $this->execute($data[2],$data[3],$data[4],$data);
-					else
-					{
-						@unlink($data[2]);
-						unlink($file);
-					}
-				}
-			}
+			cache::informLastUpdate($data[0]);
+			return $this->execute($data[2],$data[3]);
+		}
+		else
+		{
+			@unlink($file);
+			@unlink($data[2]);
+			return $this->set($phpFile,$view);
 		}
 	}
 	
 	function delete($phpFile,$arguments = array())
 	{
+		if ($phpFile[0]=='/')
+			$phpFile = substr($phpFile,1);
+		
+		if ($view==null)
+			$view = _class('view');
+		
+		if (property_exists($view,'environment'))
+			unset($view->environment);
+		
+		if (property_exists($view,'extension'))
+			unset($view->extension);
+			
 		$phpFileDir = basename(str_replace('/','-',$phpFile),FM_PHP_EXTENSION);
-		$file = kernel::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($arguments,true)).FM_PHP_EXTENSION;
+		$file = kernel::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($view,true)).FM_PHP_EXTENSION;
 		if (file_exists($file))
 		{
-			include $file;
+			@include $file;
 			@unlink($data[2]);
-			unlink($file);	
+			@unlink($file);	
 		}
 	}
 	
@@ -85,14 +122,10 @@ class phpFrontCache
 	    return _deleteDir(kernel::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/");
 	}
 	
-	function execute($__phpFile,$data,$cache,$__cacheArgs = null)
+	function execute($__phpFile,$view)
 	{
 		if (file_exists($__phpFile))
 		{
-			if ($__cacheArgs===null)
-				unset($__cacheArgs);
-			
-			extract($data,EXTR_SKIP);
 			ob_start();
 			include $__phpFile;
 			$content = ob_get_contents();
