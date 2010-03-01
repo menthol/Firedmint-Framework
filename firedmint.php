@@ -17,7 +17,7 @@ ini_set('display_errors',1);
 ob_start();
 
 
-define('FM_VERSION',             '0.1-svn');
+define('FM_VERSION',             '0.2-svn');
 define('FM_PHP_STARTFILE',       '<?php'.PHP_EOL.'if (!defined(\'FM_SECURITY\')) die();'.PHP_EOL);
 define('FM_PHP_EXTENSION',       '.php');
 
