@@ -72,6 +72,7 @@ define('FM_FILE_CONFIG',         'config');
 define('FM_FILE_EXTENSION',      'extension');
 define('FM_FILE_FUNCTION',       'function');
 define('FM_FILE_ROUTE',          'route');
+define('FM_FILE_SHUTDOWN',       'shutdown');
 define('FM_FILE_USER',           'user');
 
 // others constants

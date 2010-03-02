@@ -54,7 +54,10 @@ function _boot()
 
 function _shutdown()
 {
-	user::save();
+	// shutdown includes 
+	foreach (_getPaths() as $__path)
+		if (file_exists($__file = $__path.FM_PATH_PRIVATE.FM_FILE_SHUTDOWN.FM_PHP_EXTENSION))
+			include $__file;
 }
 
 function _loadConfig()
