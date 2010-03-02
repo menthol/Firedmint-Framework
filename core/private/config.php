@@ -1,10 +1,14 @@
 <?php 
 if (!defined('FM_SECURITY')) die();
 
+$c['config'] = array(
+	'cache_lifetime'    => 1800,
+);
+
 $c['log'] = array(
 	'hard_log'          => 'error|debug',
 	'log_args'          => false,
-	'path'              => FM_PATH_VAR.FM_PATH_PRIVATE, 
+	'path'              => FM_PATH_VAR.'private/', 
 );
 
 $c['cache'] = array(
@@ -15,17 +19,16 @@ $c['cache'] = array(
 	'file_engine'       => 'phpFileCache',
 	'file_lifetime'     => 2629743,
 	'static_engine'     => 'phpStaticCache',
-	'var_private'       => FM_PATH_VAR.FM_PATH_PRIVATE,
-	'var_public'        => FM_PATH_VAR.FM_PATH_PUBLIC,
-	'static_private'    => FM_PATH_STATIC.FM_PATH_PRIVATE,
-	'static_public'     => FM_PATH_STATIC.FM_PATH_PUBLIC,
+	'var_private'       => FM_PATH_VAR.'private/',
+	'var_public'        => FM_PATH_VAR.'public/',
+	'static_private'    => FM_PATH_STATIC.'private/',
+	'static_public'     => FM_PATH_STATIC.'public/',
 );
 
 $c['clear'] = array(
 	'key'               => '__clear',
 	'acl'               => 'acl',
 	'all'               => 'all',
-	'build'             => 'build',
 	'config'            => 'config',
 	'front'             => 'front',
 	'l10n'              => 'l10n',
@@ -62,7 +65,7 @@ $c['l10n'] = array(
 	'engine'            => 'phpl10n',
 	'cache_lifetime'    => 1800,
 	'default'           => 'en_US',
-	'parser'            => array('%'=>'printf','default'=>'printf'),
+	'parser'            => array('%'=>'printfParser','default'=>'printfParser'),
 );
 
 $c['view'] = array(
