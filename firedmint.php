@@ -86,7 +86,14 @@ require_once FM_PATH_CORE.FM_PATH_PRIVATE.FM_FILE_FUNCTION.FM_PHP_EXTENSION;
 $__content = _boot();
 ob_end_clean();
 header::send($__content);
-if(!class_exists('kernel') || !array_key_exists('header',kernel::$config) || !array_key_exists('page_compression',kernel::$config['header']) || !kernel::$config['header']['page_compression'] || !ob_start("ob_gzhandler")) ob_start();
+@ini_set('zlib.output_compression_level', 1);
+if(!class_exists('kernel')
+	|| !array_key_exists('header',kernel::$config)
+	|| !array_key_exists('page_compression',kernel::$config['header'])
+	|| !kernel::$config['header']['page_compression']
+	|| !ob_start("ob_gzhandler")
+	)
+		ob_start();
 echo $__content;
 ob_end_flush();
 ob_start();
