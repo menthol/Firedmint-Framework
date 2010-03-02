@@ -66,6 +66,7 @@ define('FM_PATH_TEMPLATE',       'template/');
 
 // define secondary paths (files)
 define('FM_FILE_ACL',            'acl');
+define('FM_FILE_BOOT',           'boot');
 define('FM_FILE_COMPATIBILITY',  'compatibility');
 define('FM_FILE_CONFIG',         'config');
 define('FM_FILE_EXTENSION',      'extension');
@@ -84,7 +85,9 @@ require_once FM_PATH_CORE.FM_PATH_PRIVATE.FM_FILE_FUNCTION.FM_PHP_EXTENSION;
 $__content = _boot();
 ob_end_clean();
 header::send($__content);
+if(!class_exists('kernel') || !array_key_exists('header',kernel::$config) || !array_key_exists('page_compression',kernel::$config['header']) || !kernel::$config['header']['page_compression'] || !ob_start("ob_gzhandler")) ob_start();
 echo $__content;
+ob_end_flush();
 ob_start();
 _shutdown();
 ob_end_clean();

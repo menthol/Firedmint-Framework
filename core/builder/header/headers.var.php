@@ -5,7 +5,6 @@ public  static $headers = array (
 	'Cache-Control'       => 'no-cache, must-revalidate',
 	'Content-Encoding'    => null,
 	'Content-Language'    => null,
-	'Content-Length'      => null,
 	'Content-Location'    => null,
 	'Content-Disposition' => null,
 	'Content-Type'        => 'text/html; charset=utf-8',

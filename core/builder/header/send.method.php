@@ -2,12 +2,7 @@
 if (!definied('FM_SECURITY')) die();
 
 static function send($content = null)
-{
-	if (is_null($content))
-		header::$headers['Content-Length'] = null;
-	else
-		header::$headers['Content-Length'] = mb_strlen($content);
-	
+{		
 	if (empty(header::$headers['X-Generator']))
 		header::$headers['X-Generator'] = kernel::$config['header']['generator'];
 	

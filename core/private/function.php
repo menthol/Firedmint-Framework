@@ -8,10 +8,30 @@ function _boot()
 	define('FM_BUILD_ID',sha1(FM_BUILD_KEY.var_export($__extension,true)));
 	define('FM_REQUEST_ID',sha1(FM_START_TIME._ip()));
 	
+	// 2nd includes 
+	$__paths = _getPaths();
+	array_pop($__paths);
+	
+	foreach ($__paths as $__path)
+		if (file_exists($__file = $__path.FM_PATH_PRIVATE.FM_FILE_COMPATIBILITY.FM_PHP_EXTENSION))
+			include $__file;
+	
+	foreach ($__paths as $__path)
+		if (file_exists($__file = $__path.FM_PATH_PRIVATE.FM_FILE_FUNCTION.FM_PHP_EXTENSION))
+			include $__file;
+	
+	
 	_class('kernel',false);
 	list(kernel::$config,kernel::$extension) = _loadConfig();
 	
 	_class('log');
+	_class('event',false);
+
+	// 3rd includes 
+	foreach (_getPaths() as $__path)
+		if (file_exists($__file = $__path.FM_PATH_PRIVATE.FM_FILE_BOOT.FM_PHP_EXTENSION))
+			include $__file;
+	
 	_class('cache');
 	_class('l10n');
 	_class('acl');
@@ -23,7 +43,7 @@ function _boot()
 	_class('view',false);
 	
 	$httpGet = $_GET;
-	if (array_key_exists(kernel::$config['clear']['key'],$_GET))
+	if (array_key_exists(kernel::$config['clear']['key'],$httpGet))
 		unset($httpGet[kernel::$config['clear']['key']]);
 	
 	$route = route::getView(array_key_exists('PATH_INFO',$_SERVER)?$_SERVER['PATH_INFO']:'/',$httpGet,kernel::$config['route']['magic_route']);

@@ -73,4 +73,5 @@ $c['view'] = array(
 
 $c['header'] = array(
 	'generator'         => 'Firedmint '.FM_VERSION,
+	'page_compression'  => true,
 );
