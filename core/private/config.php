@@ -47,6 +47,7 @@ $c['user'] = array(
 $c['auth'] = array(
 	'engine'            => 'digestAuth',
 	'max_idle_time'     => 1800,
+	'fail_login_route'  => '__403',
 );
 
 $c['acl'] = array(

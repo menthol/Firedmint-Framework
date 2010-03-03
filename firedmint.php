@@ -8,7 +8,6 @@ if (defined('FM_SECURITY'))
 }
 
 @define('FM_SECURITY',           true);
-
 @define('FM_START_TIME',         microtime(true));
 
 // don't show errors
@@ -35,7 +34,7 @@ require_once FM_PATH_CORE.'private/function'.FM_PHP_EXTENSION;
 // Firedmint Live sequance
 $__content = _boot();
 ob_end_clean();
-header::send($__content);
+header::send();
 @ini_set('zlib.output_compression_level', 1);
 if(!class_exists('config')
 	|| !array_key_exists('header',config::$config)

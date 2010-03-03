@@ -45,7 +45,7 @@ class log
 		);
 		if (preg_match('/^('.config::$config['log']['hard_log'].')$/',$type))
 		{
-			$logfile = config::$config['log']['path'].'log/'.substr(FM_SITE_DIR,0,-1).'_'.date('Y-m').'.log';
+			$logfile = config::$config['log']['path'].'log/'.substr(FM_SITE_DIR,0,-1).'_'.date('Y-m-d').'.log';
 			_createDir($logfile);
 			error_log(date('[d-m-Y H:i:s]')."[$type]["._ip()."] $message".PHP_EOL.(config::$config['log']['log_args']?serialize($arguments).PHP_EOL:null), 3, $logfile);
 		}

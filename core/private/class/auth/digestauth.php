@@ -3,13 +3,20 @@ if (!defined('FM_SECURITY')) die();
 
 class digestAuth
 {
+	static function factory()
+	{
+		event::hook('auth','login_filter',array('digestAuth','__login'),'before');
+		event::hook('auth','logout_filter',array('digestAuth','__logout'),'before');
+		return new digestAuth();
+	}
+	
 	function getUser()
 	{
 		if (   array_key_exists('PHP_AUTH_DIGEST',$_SERVER)
 			&& is_array($data = digestAuth::__digestParse($_SERVER['PHP_AUTH_DIGEST']))
 			&& is_array($openNonce = cache::getStatic('digestauth','opennonce'))
-			&& array_key_exists($data['opaque'],$openNonce)
-			&& ($openNonce[$data['opaque']] + config::$config['auth']['max_idle_time']) > time()
+			&& array_key_exists($data['nonce'],$openNonce)
+			&& ($openNonce[$data['nonce']] + config::$config['auth']['max_idle_time']) > time()
 			&& user::exists($data['username']))
 		{
 			$A1 = md5($data['username'] . ':' . $data['realm'] . ':' . user::getPassword($data['username']));
@@ -18,7 +25,7 @@ class digestAuth
 			
 			if ($data['response'] == $valid_response)
 			{
-				$openNonce[$data['opaque']] = time();
+				$openNonce[$data['nonce']] = time();
 				cache::getStatic('digestauth','opennonce',$openNonce);
 				return user::get($data['username']);
 			}
@@ -51,31 +58,70 @@ class digestAuth
 		return $data;
 	}
 	
-	function login($view,$deniedView = '__403')
+	static function __login($view)
 	{
-		$realm = _l('restricted-area',null,true);
-		$nonce = uniqid();
-		header::set('WWW-Authenticate','Digest realm="'.$realm.'",qop="auth",nonce="'.$nonce.'",opaque="'.md5($nonce).'"',true);
-		header::set('Status',401,true);
-		if (!is_array($openNonce = cache::getStatic('digestauth','opennonce')))
-			$openNonce = array();
+		if (array_key_exists('PHP_AUTH_DIGEST',$_SERVER))
+		{
+			if (is_array($data = digestAuth::__digestParse($_SERVER['PHP_AUTH_DIGEST'])))
+				digestAuth::__auth();
+			else
+			{
+				header::set('Status',400,true);
+				return $view->part('__400');
+			}
+		}
+		else 
+			digestAuth::__auth();
 		
-		$openNonce[md5($nonce)] = time();
-		cache::setStatic('digestauth','opennonce',$openNonce);
-		if (is_string($deniedView))
-			return $view->part($deniedView);
+		if (is_string(config::$config['auth']['fail_login_route']))
+			return $view->part(config::$config['auth']['fail_login_route']);
 	}
 	
-	function logout($view)
+	static function __logout($view)
 	{
-		
 		if (   array_key_exists('PHP_AUTH_DIGEST',$_SERVER)
 			&& is_array($data = digestAuth::__digestParse($_SERVER['PHP_AUTH_DIGEST']))
 			&& is_array($openNonce = cache::getStatic('digestauth','opennonce'))
-			&& array_key_exists($data['opaque'],$openNonce))
-			{
-				unset($openNonce[$data['opaque']]);
-				cache::setStatic('digestauth','opennonce',$openNonce);
-			}
+			&& array_key_exists($data['nonce'],$openNonce))
+		{
+			header::set('Status',401,true);
+			unset($openNonce[$data['nonce']]);
+			cache::setStatic('digestauth','opennonce',$openNonce);
+			digestAuth::__auth(true,'0000000l090c7');
+		}
+		elseif (   array_key_exists('PHP_AUTH_DIGEST',$_SERVER)
+				&& is_array($data = digestAuth::__digestParse($_SERVER['PHP_AUTH_DIGEST']))
+				&& $data['nonce']!='0000000l090c7')
+		{			
+			digestAuth::__auth(true,'0000000l090c7');
+		}
+		elseif (!array_key_exists('PHP_AUTH_DIGEST',$_SERVER))
+		{
+			digestAuth::__auth(true,'0000000l090c7');
+		}
+		header::set('Status',401,true);
+	}
+	
+	static function __auth($stale = null,$nonce = null)
+	{
+		if ($stale===true) $stale = ',stale=true';
+		elseif ($stale===false) $stale = ',stale=false';
+		else $stale = '';
+		
+		$realm = utf8_decode(_l('auth-realm',null,true));
+		if (is_null($nonce))
+			$nonce = uniqid();
+		
+		$domain = '/ http'.((array_key_exists('HTTPS',$_SERVER) && $_SERVER['HTTPS']=='on')?'s':null).'://'.$_SERVER["SERVER_NAME"].'/ '.'http'.((array_key_exists('HTTPS',$_SERVER) && $_SERVER['HTTPS']=='on')?'s':null).'://'.$_SERVER["SERVER_NAME"].':'.$_SERVER["SERVER_PORT"].'/';
+		header::set('WWW-Authenticate','Digest realm="'.$realm.'",qop="auth",nonce="'.$nonce.'",opaque="'.md5($nonce).'",domain="'.$domain.'"'.$stale,true);
+		header::set('Status',401,true);
+		if($nonce!='0000000l090c7')
+		{
+			if (!is_array($openNonce = cache::getStatic('digestauth','opennonce')))
+				$openNonce = array();
+			
+			$openNonce[$nonce] = time();
+			cache::setStatic('digestauth','opennonce',$openNonce);
+		}
 	}
 }

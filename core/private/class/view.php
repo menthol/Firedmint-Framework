@@ -100,10 +100,10 @@ class view
 		$__paths[] = FM_PATH_CORE.'private/view';
 		
 		$__loop     = 0;
-		$__filter   = null;
 		$__reponse  = null;
 		foreach($__paths as $__path)
 		{
+			$__filter   = null;
 			if (file_exists("$__path$__part.$view->name.filter".FM_PHP_EXTENSION))
 				$__filter = "$__path$__part.$view->name.filter".FM_PHP_EXTENSION;
 			elseif ($__part=='document' && file_exists("$__path$view->name.filter".FM_PHP_EXTENSION))
@@ -121,12 +121,8 @@ class view
 		
 		foreach($__paths as $__path)
 		{
-			if (file_exists("$__path$__part.$view->name.filter".FM_PHP_EXTENSION))
-				$__filter = "$__path$__part.$view->name.filter".FM_PHP_EXTENSION;
-			elseif ($__part=='document' && file_exists("$__path$view->name.filter".FM_PHP_EXTENSION))
-				$__filter = "$__path$view->name.filter".FM_PHP_EXTENSION;
-			
-			if (!is_null($__filter))
+			$__filter   = null;
+			if (file_exists($__filter = "$__path$__part.filter".FM_PHP_EXTENSION))
 			{
 				$__reponse = include $__filter;
 				if (is_string($__reponse))
