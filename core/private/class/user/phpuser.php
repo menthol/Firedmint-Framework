@@ -11,38 +11,8 @@ class phpUser
 			// compile users
 			if (!is_array(phpUser::$user = cache::getStatic('phpuser','static_user')))
 				phpUser::$user = array();
-			
-			$file = FM_PATH_SITE.FM_SITE_DIR.'private/user'.FM_PHP_EXTENSION;
-			if (file_exists($file))
-			{				
-				$user = array();
-				include $file;
-				phpUser::$user += $user;
-			}
-			
-			$file = FM_PATH_SITE.'all/private/user'.FM_PHP_EXTENSION;
-			if (file_exists($file))
-			{
-				$user = array();
-				include $file;
-				phpUser::$user += $user;
-			}
-			
-			list($config,$extension) = _loadConfig();
-			
-			foreach ($extension as $ext=>$values)
-			{
-				$path = $values['path'];
-				if (file_exists($path.FM_FILE_USER.FM_PHP_EXTENSION))
-				{
-					$user = array();
-					include $path.FM_FILE_USER.FM_PHP_EXTENSION;
-					phpUser::$user += $user;
-				}
-			}
-			
-			$file = FM_PATH_CORE.'private/user'.FM_PHP_EXTENSION;
-			if (file_exists($file))
+						
+			foreach (_getPaths('private/user'.FM_PHP_EXTENSION) as $file)
 			{
 				$user = array();
 				include $file;
@@ -59,7 +29,7 @@ class phpUser
 	
 	function getPassword($login)
 	{
-		if (user::userExists($login) && array_key_exists('password',phpUser::$user[$login]))
+		if (user::exists($login) && array_key_exists('password',phpUser::$user[$login]))
 			return phpUser::$user[$login]['password'];
 	}
 	
@@ -88,7 +58,7 @@ class phpUser
 		if (!property_exists($user,'login') || empty($user->login) || $user->login == user::anonymous()->login)
 			return;
 		
-		if (!user::userExists($user->login))
+		if (!user::exists($user->login))
 			foreach (user::anonymous() as $key=>$value)
 				phpUser::$user[$user->login][$key] = $value;
 		

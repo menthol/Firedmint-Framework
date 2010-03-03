@@ -8,29 +8,28 @@ function _boot()
 	define('FM_REQUEST_ID',sha1(FM_START_TIME._ip()));
 	
 	// 2nd includes 
-	$__paths = _getPaths();
+	$__paths = _getPaths('private/compatibility'.FM_PHP_EXTENSION);
 	array_pop($__paths);
+	foreach ($__paths as $__file)
+		include $__file;
 	
-	foreach ($__paths as $__path)
-		if (file_exists($__file = $__path.'private/compatibility'.FM_PHP_EXTENSION))
-			include $__file;
-	
-	foreach ($__paths as $__path)
-		if (file_exists($__file = $__path.'private/function'.FM_PHP_EXTENSION))
-			include $__file;
-	
+	$__paths = _getPaths('private/function'.FM_PHP_EXTENSION);
+	array_pop($__paths);
+	foreach ($__paths as $__file)
+		include $__file;
+		
 	_class('config',false);
 	_class('extension',false);
-	_class('log');
-	
 	list(config::$config,extension::$extension) = _loadConfig();
 	
-	// 3rd includes 
-	foreach (_getPaths() as $__path)
-		if (file_exists($__file = $__path.'private/boot'.FM_PHP_EXTENSION))
-			include $__file;
-	
+	_class('log');
 	_class('cache');
+	_class('event');
+	
+	// 3rd includes 
+	foreach (_getPaths('private/boot'.FM_PHP_EXTENSION) as $__file)
+		include $__file;
+	
 	_class('l10n');
 	_class('acl');
 	_class('user');
@@ -53,9 +52,8 @@ function _boot()
 function _shutdown()
 {
 	// shutdown includes 
-	foreach (_getPaths() as $__path)
-		if (file_exists($__file = $__path.'private/shutdown'.FM_PHP_EXTENSION))
-			include $__file;
+	foreach (_getPaths('private/shutdown'.FM_PHP_EXTENSION) as $__file)
+		include $__file;
 }
 
 function _loadConfig()
@@ -444,7 +442,7 @@ function _class($class, $load = true)
 {
 	$class = strtolower($class);
 	if (!class_exists($class,false) && _find("private/class/$class".FM_PHP_EXTENSION))
-			include_once _find("private/class/$class".FM_PHP_EXTENSION);
+		include_once _find("private/class/$class".FM_PHP_EXTENSION);
 	
 	if ($load==true)
 	{

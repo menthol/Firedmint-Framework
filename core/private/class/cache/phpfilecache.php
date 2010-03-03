@@ -44,8 +44,7 @@ class phpFileCache
 	
 	function getFile($originalPath)
 	{
-		$file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfilecache/".sha1($originalPath).FM_PHP_EXTENSION;
-		if (file_exists($file))
+		if (file_exists($file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfilecache/".sha1($originalPath).FM_PHP_EXTENSION))
 		{
 			include $file;
 			if ((is_null($data[1]) || $data[1] > time()) && file_exists($data[1]))
@@ -66,8 +65,7 @@ class phpFileCache
 	
 	function setFileContent($id,$fileContent,$cacheLifeTime = false,$public = false,$filename = null)
 	{
-		$file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfilecache/".sha1($id).FM_PHP_EXTENSION;
-		if (file_exists($file))
+		if (file_exists($file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfilecache/".sha1($id).FM_PHP_EXTENSION))
 		{
 			include $file;
 			@unlink($data[2]);
@@ -93,8 +91,7 @@ class phpFileCache
 		
 	function getFileContent($id)
 	{
-		$file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfilecache/".sha1($id).FM_PHP_EXTENSION;
-		if (file_exists($file))
+		if (file_exists($file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfilecache/".sha1($id).FM_PHP_EXTENSION))
 		{
 			include $file;
 			if ((is_null($data[1]) || $data[1] > time()) && file_exists($data[1]))
@@ -109,8 +106,7 @@ class phpFileCache
 		
 	function deleteFile($id)
 	{
-		$file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfilecache/".sha1($id).FM_PHP_EXTENSION;
-		if (file_exists($file))
+		if (file_exists($file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfilecache/".sha1($id).FM_PHP_EXTENSION))
 		{
 			include $file;
 			@unlink($data[2]);

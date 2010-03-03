@@ -31,6 +31,6 @@ class l10n
 		if (!array_key_exists($parser,l10n::$o) || !is_object(l10n::$o[$parser]))
 			l10n::$o[$parser] = _subClass('l10n',$parser);
 			
-		l10n::$o[$parser]->parse($key,$args);
+		return l10n::$o[$parser]->parse($key,$args);
 	}
 }

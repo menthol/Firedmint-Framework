@@ -13,9 +13,7 @@ class phpStaticCache
 	
 	function getStatic($type,$id)
 	{
-		$file = config::$config['cache']['static_private'].FM_SITE_DIR."phpstaticcache/$type/".sha1($id).FM_PHP_EXTENSION;
-		
-		if (file_exists($file))
+		if (file_exists($file = config::$config['cache']['static_private'].FM_SITE_DIR."phpstaticcache/$type/".sha1($id).FM_PHP_EXTENSION))
 		{
 			include $file;
 			return $data[1];
@@ -24,8 +22,7 @@ class phpStaticCache
 	
 	function deleteStatic($type,$id)
 	{
-		$file = config::$config['cache']['static_private'].FM_SITE_DIR."phpstaticcache/$type/".sha1($id).FM_PHP_EXTENSION;
-		if (file_exists($file))
+		if (file_exists($file = config::$config['cache']['static_private'].FM_SITE_DIR."phpstaticcache/$type/".sha1($id).FM_PHP_EXTENSION))
 			return unlink($file);
 		
 		return false;

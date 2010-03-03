@@ -25,9 +25,7 @@ class phpValueCache
 	{
 		if (!_clear('value'))
 		{
-			$file = config::$config['cache']['var_private'].FM_SITE_DIR."phpvaluecache/$type/".sha1($id).FM_PHP_EXTENSION;
-			
-			if (file_exists($file))
+			if (file_exists($file = config::$config['cache']['var_private'].FM_SITE_DIR."phpvaluecache/$type/".sha1($id).FM_PHP_EXTENSION))
 			{
 				include $file;
 				if (is_null($data[1]) || $data[1] > time())
@@ -46,8 +44,7 @@ class phpValueCache
 	
 	function delete($type,$id)
 	{
-		$file = config::$config['cache']['var_private'].FM_SITE_DIR."phpvaluecache/$type/".sha1($id).FM_PHP_EXTENSION;
-		if (file_exists($file))
+		if (file_exists($file = config::$config['cache']['var_private'].FM_SITE_DIR."phpvaluecache/$type/".sha1($id).FM_PHP_EXTENSION))
 			return unlink($file);
 		
 		return false;

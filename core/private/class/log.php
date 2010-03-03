@@ -11,6 +11,7 @@ class log
 	}
 	
 	static function errorHandler($errno, $errstr, $errfile, $errline) {
+		$errstr = "$errstr in $errfile on line $errline";
 		switch ($errno) {
 			case E_ERROR:
 			case E_USER_ERROR:
@@ -46,7 +47,7 @@ class log
 		{
 			$logfile = config::$config['log']['path'].'log/'.substr(FM_SITE_DIR,0,-1).'_'.date('Y-m').'.log';
 			_createDir($logfile);
-			error_log(date('[d-m-Y h:i:s]')."[$type]["._ip()."] $message".PHP_EOL.(config::$config['log']['log_args']?serialize($arguments).PHP_EOL:null), 3, $logfile);
+			error_log(date('[d-m-Y H:i:s]')."[$type]["._ip()."] $message".PHP_EOL.(config::$config['log']['log_args']?serialize($arguments).PHP_EOL:null), 3, $logfile);
 		}
 	}
 	

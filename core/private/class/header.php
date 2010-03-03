@@ -4,19 +4,19 @@ if (!defined('FM_SECURITY')) die();
 class header
 {
 	public  static $headers = array (
-		'Cache-Control'       => 'no-cache, must-revalidate',
-		'Content-Encoding'    => null,
-		'Content-Language'    => null,
-		'Content-Location'    => null,
-		'Content-Disposition' => null,
-		'Content-Type'        => 'text/html; charset=utf-8',
-		'Expires'             => null,
-		'Last-Modified'       => null,
-		'Location'            => null,
-		'Pragma'              => 'no-cache',
-		'Status'              => 200,
-		'WWW-Authenticate'    => null,
-		'X-Generator'         => null,
+		'Cache-Control'       => array('no-cache, must-revalidate',false),
+		'Content-Encoding'    => array(null,false),
+		'Content-Language'    => array(null,false),
+		'Content-Location'    => array(null,false),
+		'Content-Disposition' => array(null,false),
+		'Content-Type'        => array('text/html; charset=utf-8',false),
+		'Expires'             => array(null,false),
+		'Last-Modified'       => array(null,false),
+		'Location'            => array(null,false),
+		'Pragma'              => array('no-cache',false),
+		'Status'              => array(200,false),
+		'WWW-Authenticate'    => array(null,false),
+		'X-Generator'         => array(null,false),
 	);
 	
 	public  static $mimeCodes = array (
@@ -349,37 +349,37 @@ class header
 		'505'=>'HTTP Version Not Supported',
 	);
 	
-	static function set($key,$value = null)
+	static function set($key,$value = null,$lock = false)
 	{
-		if (array_key_exists($key,header::$headers))
-			header::$headers[$key] = $value;
+		if (array_key_exists($key,header::$headers) && !header::$headers[$key][1])
+			header::$headers[$key] = array($value,$lock);
 	}
 	
 	static function send($content = null)
 	{		
-		if (empty(header::$headers['X-Generator']))
-			header::$headers['X-Generator'] = config::$config['header']['generator'];
+		if (empty(header::$headers['X-Generator'][0]))
+			header::set('X-Generator',config::$config['header']['generator']);
 		
 		if (class_exists('cache'))
 		{
-			header::$headers['Expires'] = gmdate("D, d M Y H:i:s",cache::$expire) . " GMT";
-			header::$headers['Last-Modified'] = gmdate("D, d M Y H:i:s",cache::$lastUpdate) . " GMT";
+			header::set('Expires',gmdate("D, d M Y H:i:s",cache::$expire) . " GMT");
+			header::set('Last-Modified',gmdate("D, d M Y H:i:s",cache::$lastUpdate) . " GMT");
 		}
 		
-		if (empty(header::$headers['Content-Type']))
-			header::$headers['Content-Type'] = 'text/html; charset=utf-8';
+		if (empty(header::$headers['Content-Type'][0]))
+			header::set('Content-Type','text/html; charset=utf-8');
 			
-		if (array_key_exists(header::$headers['Content-Type'],header::$mimeCodes))
-			header::$headers['Content-Type'] = header::$mimeCodes[header::$headers['Content-Type']];
+		if (array_key_exists(header::$headers['Content-Type'][0],header::$mimeCodes))
+			header::set('Content-Type',header::$mimeCodes[header::$headers['Content-Type'][0]]);
 		
-		if (array_key_exists('Status',header::$headers) && is_numeric(header::$headers['Status']))
+		if (array_key_exists('Status',header::$headers) && is_numeric(header::$headers['Status'][0]))
 		{
-			header('x',true,header::$headers['Status']);
+			@header('x',true,header::$headers['Status'][0]);
 			unset(header::$headers['Status']);
 		}
 		
 		foreach (header::$headers as $key=>$header)
-			if (!empty($header))
-				header("$key: $header");
+			if (!empty($header[0]))
+				@header("$key: {$header[0]}");
 	}
 }

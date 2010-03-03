@@ -66,10 +66,8 @@ class phpFrontCache
 		if (property_exists($view,'extension'))
 			unset($view->extension);
 		
-		$phpFileDir = basename(str_replace('/','-',$phpFile),FM_PHP_EXTENSION);
-		$file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($view,true)).FM_PHP_EXTENSION;
-		
-		if (!file_exists($file))
+		$phpFileDir = basename(str_replace('/','-',$phpFile),FM_PHP_EXTENSION);		
+		if (!file_exists($file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($view,true)).FM_PHP_EXTENSION))
 			return cache::setFront($phpFile,$view);	
 		
 		include $file;
@@ -105,8 +103,7 @@ class phpFrontCache
 			unset($view->extension);
 			
 		$phpFileDir = basename(str_replace('/','-',$phpFile),FM_PHP_EXTENSION);
-		$file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($view,true)).FM_PHP_EXTENSION;
-		if (file_exists($file))
+		if (file_exists($file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($view,true)).FM_PHP_EXTENSION))
 		{
 			@include $file;
 			@unlink($data[2]);

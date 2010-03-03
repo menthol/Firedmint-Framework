@@ -1,10 +1,6 @@
 <?php 
 if (!defined('FM_SECURITY')) die();
 
-$c['config'] = array(
-	'cache_lifetime'    => 1800,
-);
-
 $c['log'] = array(
 	'hard_log'          => 'error|debug',
 	'log_args'          => false,
@@ -25,11 +21,17 @@ $c['cache'] = array(
 	'static_public'     => FM_PATH_STATIC.'public/',
 );
 
+$c['event'] = array(
+	'cache_lifetime'    => 1800,
+);
+
+
 $c['clear'] = array(
 	'key'               => '__clear',
 	'acl'               => 'acl',
 	'all'               => 'all',
 	'config'            => 'config',
+	'event'             => 'event',
 	'front'             => 'front',
 	'l10n'              => 'l10n',
 	'route'             => 'route',

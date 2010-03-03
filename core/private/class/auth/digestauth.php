@@ -5,39 +5,22 @@ class digestAuth
 {
 	function getUser()
 	{
-		if (array_key_exists('PHP_AUTH_DIGEST',$_SERVER) && is_array($data = digestAuth::__digestParse($_SERVER['PHP_AUTH_DIGEST'])))
+		if (   array_key_exists('PHP_AUTH_DIGEST',$_SERVER)
+			&& is_array($data = digestAuth::__digestParse($_SERVER['PHP_AUTH_DIGEST']))
+			&& is_array($openNonce = cache::getStatic('digestauth','opennonce'))
+			&& array_key_exists($data['opaque'],$openNonce)
+			&& ($openNonce[$data['opaque']] + config::$config['auth']['max_idle_time']) > time()
+			&& user::exists($data['username']))
 		{
-			if (user::userExists($data['username']))
+			$A1 = md5($data['username'] . ':' . $data['realm'] . ':' . user::getPassword($data['username']));
+			$A2 = md5($_SERVER['REQUEST_METHOD'].':'.$data['uri']);
+			$valid_response = md5($A1.':'.$data['nonce'].':'.$data['nc'].':'.$data['cnonce'].':'.$data['qop'].':'.$A2);
+			
+			if ($data['response'] == $valid_response)
 			{
-				$A1 = md5($data['username'] . ':' . $data['realm'] . ':' . user::getPassword($data['username']));
-				$A2 = md5($_SERVER['REQUEST_METHOD'].':'.$data['uri']);
-				$valid_response = md5($A1.':'.$data['nonce'].':'.$data['nc'].':'.$data['cnonce'].':'.$data['qop'].':'.$A2);
-				
-				if ($data['response'] == $valid_response)
-				{
-					$user = user::getUser($data['username']);
-					if (!array_key_exists('digestauth',$user->data))
-						$user->data['digestauth'] = array();
-					
-					if (!array_key_exists('login_places',$user->data['digestauth']))
-						$user->data['digestauth']['login_places'] = array();
-					
-					$connect_key = sha1($data['nonce']._ip());
-					if (!array_key_exists($connect_key,$user->data['digestauth']['login_places']))
-						$user->data['digestauth']['login_places'][$connect_key] = time();
-					
-					foreach ($user->data['digestauth']['login_places'] as $key=>$value)
-						if (($user->data['digestauth']['login_places'][$key] + config::$config['auth']['max_idle_time'])<time())
-							unset($user->data['digestauth']['login_places'][$key]);
-					
-					if (array_key_exists($connect_key,$user->data['digestauth']['login_places']))
-						$user->data['digestauth']['login_places'][$connect_key] = time();
-					
-					user::userSave($user);
-					
-					if (array_key_exists($connect_key,$user->data['digestauth']['login_places']))
-						return $user;
-				}
+				$openNonce[$data['opaque']] = time();
+				cache::getStatic('digestauth','opennonce',$openNonce);
+				return user::get($data['username']);
 			}
 		}
 		
@@ -66,5 +49,33 @@ class digestAuth
 		$data['qop'] = $match[1];
 		
 		return $data;
+	}
+	
+	function login($view,$deniedView = '__403')
+	{
+		$realm = _l('restricted-area',null,true);
+		$nonce = uniqid();
+		header::set('WWW-Authenticate','Digest realm="'.$realm.'",qop="auth",nonce="'.$nonce.'",opaque="'.md5($nonce).'"',true);
+		header::set('Status',401,true);
+		if (!is_array($openNonce = cache::getStatic('digestauth','opennonce')))
+			$openNonce = array();
+		
+		$openNonce[md5($nonce)] = time();
+		cache::setStatic('digestauth','opennonce',$openNonce);
+		if (is_string($deniedView))
+			return $view->part($deniedView);
+	}
+	
+	function logout($view)
+	{
+		
+		if (   array_key_exists('PHP_AUTH_DIGEST',$_SERVER)
+			&& is_array($data = digestAuth::__digestParse($_SERVER['PHP_AUTH_DIGEST']))
+			&& is_array($openNonce = cache::getStatic('digestauth','opennonce'))
+			&& array_key_exists($data['opaque'],$openNonce))
+			{
+				unset($openNonce[$data['opaque']]);
+				cache::setStatic('digestauth','opennonce',$openNonce);
+			}
 	}
 }

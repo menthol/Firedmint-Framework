@@ -136,6 +136,7 @@ class view
 			}
 		}
 		
+		$__template = null;
 		foreach($__paths as $__path)
 		{
 			foreach (config::$config['view']['compilator'] as $__ext=>$__engine)
