@@ -635,10 +635,8 @@ function _attribute($data)
 
 function _redirect($url,$code = 302)
 {
-	log::message('redirect');
 	header::set('Status',$code,true);
 	header::set('Location',$url,true);
-	
 }
 
 function _thisPage()
