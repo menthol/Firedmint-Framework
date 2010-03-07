@@ -5,7 +5,7 @@ class phpValueCache
 {
 	function set($type,$id,$data,$cacheLifeTime = false)
 	{
-		$file = config::$config['cache']['var_private'].FM_SITE_DIR."phpvaluecache/$type/".sha1($id).FM_PHP_EXTENSION;
+		$file = config::$config['cache']['var_private'].FM_SITE_DIR."phpvaluecache/$type/".sha1($id).'.php';
 		_createDir($file);
 		if ($cacheLifeTime===false)
 			$cacheLifeTime = config::$config['cache']['value_lifetime'];
@@ -25,7 +25,7 @@ class phpValueCache
 	{
 		if (!_clear('value'))
 		{
-			if (file_exists($file = config::$config['cache']['var_private'].FM_SITE_DIR."phpvaluecache/$type/".sha1($id).FM_PHP_EXTENSION))
+			if (file_exists($file = config::$config['cache']['var_private'].FM_SITE_DIR."phpvaluecache/$type/".sha1($id).'.php'))
 			{
 				include $file;
 				if (is_null($data[1]) || $data[1] > time())
@@ -44,7 +44,7 @@ class phpValueCache
 	
 	function delete($type,$id)
 	{
-		if (file_exists($file = config::$config['cache']['var_private'].FM_SITE_DIR."phpvaluecache/$type/".sha1($id).FM_PHP_EXTENSION))
+		if (file_exists($file = config::$config['cache']['var_private'].FM_SITE_DIR."phpvaluecache/$type/".sha1($id).'.php'))
 			return unlink($file);
 		
 		return false;

@@ -12,16 +12,16 @@ class cache
 	static function factory()
 	{	
 		
-		if (!array_key_exists('file',cache::$o) || !is_object(cache::$o['file']))
+		if (!isset(cache::$o['file']) || !is_object(cache::$o['file']))
 			cache::$o['file'] = _subClass('cache',config::$config['cache']['file_engine']);
 		
-		if (!array_key_exists('value',cache::$o) || !is_object(cache::$o['value']))
+		if (!isset(cache::$o['value']) || !is_object(cache::$o['value']))
 			cache::$o['value'] = _subClass('cache',config::$config['cache']['value_engine']);
 		
-		if (!array_key_exists('front',cache::$o) || !is_object(cache::$o['front']))
+		if (!isset(cache::$o['front']) || !is_object(cache::$o['front']))
 			cache::$o['front'] = _subClass('cache',config::$config['cache']['front_engine']);
 		
-		if (!array_key_exists('static',cache::$o) || !is_object(cache::$o['static']))
+		if (!isset(cache::$o['static']) || !is_object(cache::$o['static']))
 			cache::$o['static'] = _subClass('cache',config::$config['cache']['static_engine']);
 	}
 	
@@ -43,115 +43,96 @@ class cache
 	
 	static function set($type,$id,$data,$cacheLifeTime = false)
 	{
-		if (array_key_exists('value',cache::$o) && is_object(cache::$o['value']))
-			return cache::$o['value']->set($type,$id,$data,$cacheLifeTime);
+		return cache::$o['value']->set($type,$id,$data,$cacheLifeTime);
 	}
 	
 	static function get($type,$id)
 	{
-		if (array_key_exists('value',cache::$o) && is_object(cache::$o['value']))
-			return cache::$o['value']->get($type,$id);
+		return cache::$o['value']->get($type,$id);
 	}
 	
 	static function delete($type,$id)
 	{
-		if (array_key_exists('value',cache::$o) && is_object(cache::$o['value']))
-			return cache::$o['value']->delete($type,$id);
+		return cache::$o['value']->delete($type,$id);
 	}
 	
 	static function clean($type = null)
 	{
-		if (array_key_exists('value',cache::$o) && is_object(cache::$o['value']))
-			return cache::$o['value']->clean($type);
+		return cache::$o['value']->clean($type);
 	}
 	
 	static function setFile($originalPath,$cacheLifeTime = false,$public = false,$filename = null)
 	{
-		if (array_key_exists('file',cache::$o) && is_object(cache::$o['file']))
-			return cache::$o['file']->setFile($originalPath,$cacheLifeTime,$public,$filename);
+		return cache::$o['file']->setFile($originalPath,$cacheLifeTime,$public,$filename);
 	}
 	
 	static function getFile($originalPath)
 	{
-		if (array_key_exists('file',cache::$o) && is_object(cache::$o['file']))
-			return cache::$o['file']-> getFile($originalPath);
+		return cache::$o['file']-> getFile($originalPath);
 	}
 			
 	static function setFileContent($id,$fileContent,$cacheLifeTime = false,$public = false,$filename = null)
 	{
-		if (array_key_exists('file',cache::$o) && is_object(cache::$o['file']))
-			return cache::$o['file']->setFileContent($id,$fileContent,$cacheLifeTime,$public,$filename);
+		return cache::$o['file']->setFileContent($id,$fileContent,$cacheLifeTime,$public,$filename);
 	}
 				
 	static function getFileContent($id)
 	{
-		if (array_key_exists('file',cache::$o) && is_object(cache::$o['file']))
-			return cache::$o['file']->getFileContent($id);
+		return cache::$o['file']->getFileContent($id);
 	}
 				
 	static function deleteFile($id)
 	{
-		if (array_key_exists('file',cache::$o) && is_object(cache::$o['file']))
-			return cache::$o['file']->deleteFile($id);
+		return cache::$o['file']->deleteFile($id);
 	}
 			
 	static function cleanFile($cleanStatic = false)
 	{
-		if (array_key_exists('file',cache::$o) && is_object(cache::$o['file']))
-			return cache::$o['file']->cleanFile($cleanStatic);
+		return cache::$o['file']->cleanFile($cleanStatic);
 	}
 	
 	static function setFront($phpFile,$view = null)
 	{
-		if (array_key_exists('front',cache::$o) && is_object(cache::$o['front']))
-			return cache::$o['front']->setFront($phpFile,$view);
+		return cache::$o['front']->setFront($phpFile,$view);
 	}
 			
 	static function getFront($phpFile,$view = null)
 	{
-		if (array_key_exists('front',cache::$o) && is_object(cache::$o['front']))
-			return cache::$o['front']->getFront($phpFile,$view);
+		return cache::$o['front']->getFront($phpFile,$view);
 	}
 			
 	static function deleteFront($phpFile,$arguments = array())
 	{
-		if (array_key_exists('front',cache::$o) && is_object(cache::$o['front']))
-			return cache::$o['front']->deleteFront($phpFile,$arguments);
+		return cache::$o['front']->deleteFront($phpFile,$arguments);
 	}
 			
 	static function cleanFront($phpFile = null)
 	{
-		if (array_key_exists('front',cache::$o) && is_object(cache::$o['front']))
-			return cache::$o['front']->cleanFront($phpFile);
+		return cache::$o['front']->cleanFront($phpFile);
 	}
 		
 	static function executeFront($phpFile,$view)
 	{
-		if (array_key_exists('front',cache::$o) && is_object(cache::$o['front']))
-			return cache::$o['front']->executeFront($phpFile,$view);
+		return cache::$o['front']->executeFront($phpFile,$view);
 	}
 	
 	static function setStatic($type,$id,$data)
 	{
-		if (array_key_exists('static',cache::$o) && is_object(cache::$o['static']))
-			return cache::$o['static']->setStatic($type,$id,$data);
+		return cache::$o['static']->setStatic($type,$id,$data);
 	}
 	
 	static function getStatic($type,$id)
 	{
-		if (array_key_exists('static',cache::$o) && is_object(cache::$o['static']))
-			return cache::$o['static']->getStatic($type,$id);
+		return cache::$o['static']->getStatic($type,$id);
 	}
 	
 	static function deleteStatic($type,$id)
 	{
-		if (array_key_exists('static',cache::$o) && is_object(cache::$o['static']))
-			return cache::$o['static']->deleteStatic($type,$id);
+		return cache::$o['static']->deleteStatic($type,$id);
 	}
 	
 	static function cleanStatic($type = null)
 	{
-		if (array_key_exists('static',cache::$o) && is_object(cache::$o['static']))
-			return cache::$o['static']->cleanStatic($type);
+		return cache::$o['static']->cleanStatic($type);
 	}
 }

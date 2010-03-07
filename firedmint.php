@@ -18,7 +18,6 @@ ob_start();
 
 define('FM_VERSION',             '0.3-svn');
 define('FM_PHP_STARTFILE',       '<?php'.PHP_EOL.'if (!defined(\'FM_SECURITY\')) die();'.PHP_EOL);
-define('FM_PHP_EXTENSION',       '.php');
 
 
 // define root paths
@@ -28,22 +27,20 @@ define('FM_PATH_STATIC',         'static/');
 define('FM_PATH_VAR',            'var/');
 
 // boot includes
-require_once FM_PATH_CORE.'private/compatibility'.FM_PHP_EXTENSION;
-require_once FM_PATH_CORE.'private/function'.FM_PHP_EXTENSION;
+require_once FM_PATH_CORE.'private/compatibility.php';
+require_once FM_PATH_CORE.'private/function.php';
 
 // Firedmint Live sequance
 $__content = _boot();
 ob_end_clean();
 header::send();
 @ini_set('zlib.output_compression_level', 1);
-if(!class_exists('config')
-	|| !array_key_exists('header',config::$config)
-	|| !array_key_exists('page_compression',config::$config['header'])
-	|| !config::$config['header']['page_compression']
-	|| !ob_start("ob_gzhandler")
-	)
-		ob_start();
-echo $__content;
+if(!config::$config['header']['page_compression'] || !ob_start("ob_gzhandler"))
+	ob_start();
+
+if (header::$showContent)
+	echo $__content;
+
 ob_end_flush();
 ob_start();
 _shutdown();

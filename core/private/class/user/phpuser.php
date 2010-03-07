@@ -12,7 +12,7 @@ class phpUser
 			if (!is_array(phpUser::$user = cache::getStatic('phpuser','static_user')))
 				phpUser::$user = array();
 						
-			foreach (_getPaths('private/user'.FM_PHP_EXTENSION) as $file)
+			foreach (_getPaths('private/user.php') as $file)
 			{
 				$user = array();
 				include $file;
@@ -22,14 +22,22 @@ class phpUser
 		}
 	}
 	
+	function check($login,$password)
+	{
+		if (isset(phpUser::$user[$login]['password']) && phpUser::$user[$login]['password']==$password)
+			return true;
+		
+		return false;
+	}
+	
 	function exists($login)
 	{
-	 	return array_key_exists($login,phpUser::$user);
+	 	return isset(phpUser::$user[$login]);
 	}
 	
 	function getPassword($login)
 	{
-		if (user::exists($login) && array_key_exists('password',phpUser::$user[$login]))
+		if (isset(phpUser::$user[$login]['password']))
 			return phpUser::$user[$login]['password'];
 	}
 	
@@ -40,9 +48,9 @@ class phpUser
 		if (user::exists($login))
 		{
 			$data = phpUser::$user[$login];
-			$user->name  = $login;
-			$user->id    = crc32($login);
-			$user->login = $login;
+			$user->name      = $login;
+			$user->login     = $login;
+			$user->anonymous = false;
 			
 			if (isset($data['password']))
 				unset($data['password']);
@@ -55,15 +63,12 @@ class phpUser
 	
 	function save($user)
 	{
-		if (!property_exists($user,'login') || empty($user->login) || $user->login == user::anonymous()->login)
+		if ($user->anonymous)
 			return;
 		
 		if (!user::exists($user->login))
 			foreach (user::anonymous() as $key=>$value)
 				phpUser::$user[$user->login][$key] = $value;
-		
-		if (!array_key_exists('id',phpUser::$user[$user->login]))
-			phpUser::$user[$user->login]['id'] = crc32($user->login);
 		
 		foreach ($user as $key=>$value)
 			phpUser::$user[$user->login][$key] = $value;

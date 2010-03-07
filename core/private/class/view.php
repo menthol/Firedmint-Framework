@@ -29,7 +29,7 @@ class view
 		$view = _class('view');
 		list($view->name,$status,$view->extension,$view->data,$view->environment) = $route;
 		
-		if (array_key_exists('l10n',$view->data))
+		if (isset($view->data['l10n']))
 		{
 			$view->l10n = $view->data['l10n'];
 			unset($view->data['l10n']);
@@ -41,29 +41,49 @@ class view
 		$view->user = auth::getUser()->login;
 		
 		header::set('Status',$status);
-		header::set('Content-Language',_l('xml-lang',null,true));
+		header::set('Content-Language',_l('xml-lang'));
 		
 		$view->params = $view->environment['params'];
 		unset($view->environment['params']);
 		
-		return $view->part('document');
+		return $view->select('document');
 	}
 	
 	function part($__part,$__arguments = null)
 	{
+		echo '<?php echo $view->select('.var_export($__part,true).','.var_export($__arguments,true).'); ?>';
+	}
+	
+	function virtual($__part,$__arguments = null)
+	{
+		echo '<?php echo $view->select('.var_export($__part,true).','.var_export($__arguments,true).','.var_export(true,true).'); ?>';
+	}
+	
+	function select($__part,$__arguments = null,$virtual = false)
+	{
 		if (is_array($__arguments))
 		{
-			$view            = _class('view');
-			$view->l10n      = $this->l10n;
-			$view->name      = $this->name;
-			$view->user      = $this->user;
-			$view->extension = $this->extension;
+			if (array_search('*',$__arguments)!==false)
+			{
+				$view = clone $this;
+				unset($__arguments[array_search('*',$__arguments)]);
+			}
+			else
+			{ 
+				$view            = _class('view');
+				$view->l10n      = $this->l10n;
+				$view->name      = $this->name;
+				$view->user      = $this->user;
+				$view->cache     = $this->cache;
+				if (isset($this->extension))
+				$view->extension = $this->extension;
+			}
 			
 			foreach ($__arguments as $key=>$value)
 			{
 				if (is_numeric($key))
 				{
-					if (array_key_exists($value,$this->data))
+					if (isset($view->data[$value]))
 						$view->data[$value] = $this->data[$value];
 					elseif (property_exists($this,$value))
 						$view->{$value} = $this->{$value};
@@ -82,8 +102,12 @@ class view
 		else
 			$view = clone $this;
 		
+		$view->content = null;
+		
 		if (!property_exists($view,'cache'))
 			$view->cache = config::$config['view']['cache_lifetime'];
+		
+		if (is_string($__ = event::trigger('view:select',$__part,'before',$view))) return $__;
 		
 		$__paths = array();
 		$__paths[] = FM_PATH_SITE.FM_SITE_DIR.'private/view/';
@@ -96,18 +120,14 @@ class view
 				$__paths[] = FM_PATH_SITE.FM_SITE_DIR.'template/'.config::$config['view']['template'].'/private/view';
 			else
 				$__paths[] = FM_PATH_SITE.'all/template/'.config::$config['view']['template'].'/private/view';
-			
-		$__paths[] = FM_PATH_CORE.'private/view';
 		
-		$__loop     = 0;
-		$__reponse  = null;
 		foreach($__paths as $__path)
 		{
 			$__filter   = null;
-			if (file_exists("$__path$__part.$view->name.filter".FM_PHP_EXTENSION))
-				$__filter = "$__path$__part.$view->name.filter".FM_PHP_EXTENSION;
-			elseif ($__part=='document' && file_exists("$__path$view->name.filter".FM_PHP_EXTENSION))
-				$__filter = "$__path$view->name.filter".FM_PHP_EXTENSION;
+			if (file_exists("$__path$__part.$view->name.filter.php"))
+				$__filter = "$__path$__part.$view->name.filter.php";
+			elseif ($__part=='document' && file_exists("$__path$view->name.filter.php"))
+				$__filter = "$__path$view->name.filter.php";
 			
 			if (!is_null($__filter))
 			{
@@ -122,7 +142,7 @@ class view
 		foreach($__paths as $__path)
 		{
 			$__filter   = null;
-			if (file_exists($__filter = "$__path$__part.filter".FM_PHP_EXTENSION))
+			if (file_exists($__filter = "$__path$__part.filter.php"))
 			{
 				$__reponse = include $__filter;
 				if (is_string($__reponse))
@@ -133,47 +153,22 @@ class view
 		}
 		
 		$__template = null;
-		foreach($__paths as $__path)
+		$__compilator = null;
+		if (!$virtual)
 		{
-			foreach (config::$config['view']['compilator'] as $__ext=>$__engine)
-			{
-				if (file_exists("$__path$__part.$view->name.$__ext"))
-				{
-					$__template = "$__path$__part.$view->name.$__ext";
-					$__compilator = $__engine; 
-					break 2;
-				}
-				elseif ($__part=='document' && file_exists("$__path$view->name.$__ext"))
-				{
-					$__template = "$__path$view->name.$__ext";
-					$__compilator = $__engine;
-					break 2;
-				}
-			}
-		}
-		
-		if (is_null($__template))
-		{
-			foreach($__paths as $__path)
-			{
-				if (file_exists("$__path$__part.filter".FM_PHP_EXTENSION))
-				{
-					$__reponse = include "$__path$__part.filter".FM_PHP_EXTENSION;
-					
-					if (is_string($__reponse))
-						return $__reponse;
-					
-					break;
-				}	
-			}
-			
 			foreach($__paths as $__path)
 			{
 				foreach (config::$config['view']['compilator'] as $__ext=>$__engine)
 				{
-					if (file_exists("$__path$__part.$__ext"))
+					if (is_null($__template) && file_exists("$__path$__part.$view->name.$__ext"))
 					{
-						$__template = "$__path$__part.$__ext";
+						$__template = "$__path$__part.$view->name.$__ext";
+						$__compilator = $__engine; 
+						break 2;
+					}
+					elseif (is_null($__template) && $__part=='document' && file_exists("$__path$view->name.$__ext"))
+					{
+						$__template = "$__path$view->name.$__ext";
 						$__compilator = $__engine;
 						break 2;
 					}
@@ -182,8 +177,110 @@ class view
 		}
 		
 		if (is_null($__template))
-			return;
+		{
+			foreach($__paths as $__path)
+			{
+				if (file_exists("$__path$__part.filter.php"))
+				{
+					$__reponse = include "$__path$__part.filter.php";
+					
+					if (is_string($__reponse))
+						return $__reponse;
+					
+					break;
+				}	
+			}
+			
+			if (!$virtual)
+			{
+				foreach($__paths as $__path)
+				{
+					foreach (config::$config['view']['compilator'] as $__ext=>$__engine)
+					{
+						if (is_null($__template) && file_exists("$__path$__part.$__ext"))
+						{
+							$__template = "$__path$__part.$__ext";
+							$__compilator = $__engine;
+							break 2;
+						}
+					}
+				}
+			}
+		}
 		
+		$__path = FM_PATH_CORE.'private/view/';
+		if (is_null($__template))
+		{
+			$__filter   = null;
+			if (file_exists("$__path$__part.$view->name.filter.php"))
+				$__filter = "$__path$__part.$view->name.filter.php";
+			elseif ($__part=='document' && file_exists("$__path$view->name.filter.php"))
+				$__filter = "$__path$view->name.filter.php";
+			
+			if (!is_null($__filter))
+			{
+				$__reponse = include $__filter;
+				if (is_string($__reponse))
+					return $__reponse;
+			}
+			
+			$__filter   = null;
+			if (file_exists($__filter = "$__path$__part.filter.php"))
+			{
+				$__reponse = include $__filter;
+				if (is_string($__reponse))
+					return $__reponse;
+			}
+			
+			if (!$virtual)
+			{
+				foreach (config::$config['view']['compilator'] as $__ext=>$__engine)
+				{
+					if (is_null($__template) && file_exists("$__path$__part.$view->name.$__ext"))
+					{
+						$__template = "$__path$__part.$view->name.$__ext";
+						$__compilator = $__engine; 
+						break;
+					}
+					elseif (is_null($__template) && $__part=='document' && file_exists("$__path$view->name.$__ext"))
+					{
+						$__template = "$__path$view->name.$__ext";
+						$__compilator = $__engine;
+						break;
+					}
+				}
+			}
+			
+			if (is_null($__template))
+			{
+				if (file_exists("$__path$__part.filter.php"))
+				{
+					$__reponse = include "$__path$__part.filter.php";
+					
+					if (is_string($__reponse))
+						return $__reponse;
+				}
+
+				if (!$virtual)
+				{
+					foreach (config::$config['view']['compilator'] as $__ext=>$__engine)
+					{
+						if (file_exists("$__path$__part.$__ext"))
+						{
+							$__template = "$__path$__part.$__ext";
+							$__compilator = $__engine;
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		if (is_string($__ = event::trigger('view:select',$__part,'after',$view,$__template,$__compilator))) return $__;
+
+		if (is_null($__template))
+			return $view->content;
+
 		return cache::getFront(template::compil($__compilator,$__template),$view);
 	}
 }

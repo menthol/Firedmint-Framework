@@ -12,10 +12,10 @@ class digestAuth
 	
 	function getUser()
 	{
-		if (   array_key_exists('PHP_AUTH_DIGEST',$_SERVER)
+		if (   isset($_SERVER['PHP_AUTH_DIGEST'])
 			&& is_array($data = digestAuth::__digestParse($_SERVER['PHP_AUTH_DIGEST']))
 			&& is_array($openNonce = cache::getStatic('digestauth','opennonce'))
-			&& array_key_exists($data['nonce'],$openNonce)
+			&& isset($openNonce[$data['nonce']])
 			&& ($openNonce[$data['nonce']] + config::$config['auth']['max_idle_time']) > time()
 			&& user::exists($data['username']))
 		{
@@ -60,7 +60,7 @@ class digestAuth
 	
 	static function __login($view)
 	{
-		if (array_key_exists('PHP_AUTH_DIGEST',$_SERVER))
+		if (isset($_SERVER['PHP_AUTH_DIGEST']))
 		{
 			if (is_array($data = digestAuth::__digestParse($_SERVER['PHP_AUTH_DIGEST'])))
 				digestAuth::__auth();
@@ -79,23 +79,23 @@ class digestAuth
 	
 	static function __logout($view)
 	{
-		if (   array_key_exists('PHP_AUTH_DIGEST',$_SERVER)
+		if (   isset($_SERVER['PHP_AUTH_DIGEST'])
 			&& is_array($data = digestAuth::__digestParse($_SERVER['PHP_AUTH_DIGEST']))
 			&& is_array($openNonce = cache::getStatic('digestauth','opennonce'))
-			&& array_key_exists($data['nonce'],$openNonce))
+			&& isset($openNonce[$data['nonce']]))
 		{
 			header::set('Status',401,true);
 			unset($openNonce[$data['nonce']]);
 			cache::setStatic('digestauth','opennonce',$openNonce);
 			digestAuth::__auth(true,'0000000l090c7');
 		}
-		elseif (   array_key_exists('PHP_AUTH_DIGEST',$_SERVER)
+		elseif (   isset($_SERVER['PHP_AUTH_DIGEST'])
 				&& is_array($data = digestAuth::__digestParse($_SERVER['PHP_AUTH_DIGEST']))
 				&& $data['nonce']!='0000000l090c7')
 		{			
 			digestAuth::__auth(true,'0000000l090c7');
 		}
-		elseif (!array_key_exists('PHP_AUTH_DIGEST',$_SERVER))
+		elseif (!isset($_SERVER['PHP_AUTH_DIGEST']))
 		{
 			digestAuth::__auth(true,'0000000l090c7');
 		}
@@ -108,11 +108,11 @@ class digestAuth
 		elseif ($stale===false) $stale = ',stale=false';
 		else $stale = '';
 		
-		$realm = utf8_decode(_l('auth-realm',null,true));
+		$realm = utf8_decode(_l('auth-realm'));
 		if (is_null($nonce))
 			$nonce = uniqid();
 		
-		$domain = '/ http'.((array_key_exists('HTTPS',$_SERVER) && $_SERVER['HTTPS']=='on')?'s':null).'://'.$_SERVER["SERVER_NAME"].'/ '.'http'.((array_key_exists('HTTPS',$_SERVER) && $_SERVER['HTTPS']=='on')?'s':null).'://'.$_SERVER["SERVER_NAME"].':'.$_SERVER["SERVER_PORT"].'/';
+		$domain = '/ http'.((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']=='on')?'s':null).'://'.$_SERVER["SERVER_NAME"].'/ '.'http'.((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']=='on')?'s':null).'://'.$_SERVER["SERVER_NAME"].':'.$_SERVER["SERVER_PORT"].'/';
 		header::set('WWW-Authenticate','Digest realm="'.$realm.'",qop="auth",nonce="'.$nonce.'",opaque="'.md5($nonce).'",domain="'.$domain.'"'.$stale,true);
 		header::set('Status',401,true);
 		if($nonce!='0000000l090c7')

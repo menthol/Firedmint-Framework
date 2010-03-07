@@ -17,9 +17,9 @@ class phpFrontCache
 		if (property_exists($view,'extension'))
 			unset($view->extension);
 	
-		$phpFileDir = basename(str_replace('/','-',$phpFile),FM_PHP_EXTENSION);
-		$file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($view,true)).FM_PHP_EXTENSION;
-		$filePart = config::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($view,true)).'.part'.FM_PHP_EXTENSION;
+		$phpFileDir = basename(str_replace('/','-',$phpFile),'.php');
+		$file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($view,true)).'.php';
+		$filePart = config::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($view,true)).'.part.php';
 		
 		if (!file_exists($phpFile))
 			return;
@@ -66,8 +66,8 @@ class phpFrontCache
 		if (property_exists($view,'extension'))
 			unset($view->extension);
 		
-		$phpFileDir = basename(str_replace('/','-',$phpFile),FM_PHP_EXTENSION);		
-		if (!file_exists($file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($view,true)).FM_PHP_EXTENSION))
+		$phpFileDir = basename(str_replace('/','-',$phpFile),'.php');		
+		if (!file_exists($file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($view,true)).'.php'))
 			return cache::setFront($phpFile,$view);	
 		
 		include $file;
@@ -102,8 +102,8 @@ class phpFrontCache
 		if (property_exists($view,'extension'))
 			unset($view->extension);
 			
-		$phpFileDir = basename(str_replace('/','-',$phpFile),FM_PHP_EXTENSION);
-		if (file_exists($file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($view,true)).FM_PHP_EXTENSION))
+		$phpFileDir = basename(str_replace('/','-',$phpFile),'.php');
+		if (file_exists($file = config::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".$phpFileDir.'/'.sha1($phpFile.var_export($view,true)).'.php'))
 		{
 			@include $file;
 			@unlink($data[2]);
@@ -114,7 +114,7 @@ class phpFrontCache
 	function cleanFront($phpFile = null)
 	{
 		if (strlen($phpFile)>0)
-	    	return _deleteDir(config::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".basename(str_replace('/','-',$phpFile),FM_PHP_EXTENSION).'/');
+	    	return _deleteDir(config::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/".basename(str_replace('/','-',$phpFile),'.php').'/');
 	    
 	    return _deleteDir(config::$config['cache']['var_private'].FM_SITE_DIR."phpfrontcache/");
 	}
@@ -124,9 +124,13 @@ class phpFrontCache
 		if (file_exists($__phpFile))
 		{
 			ob_start();
-			include $__phpFile;
+			$return = include $__phpFile;
 			$content = ob_get_contents();
 			ob_end_clean();
+			
+			if (is_string($return))
+				return $return;
+			
 			return $content;
 		}
 	}

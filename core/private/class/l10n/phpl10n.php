@@ -15,14 +15,14 @@ class phpL10n
 			
 			foreach (_getPaths() as $path)
 			{
-				if (file_exists($_path = $path.'l10n/'.strtolower($lang).FM_PHP_EXTENSION))
+				if (file_exists($_path = $path.'l10n/'.strtolower($lang).'.php'))
 				{
 					$l10n = array();
 					include $_path;
 					$__l10n += $l10n;
 				}
 
-				if (file_exists($_path = $path.'l10n/'.substr(strtolower($lang),0,strpos($lang,'_')).FM_PHP_EXTENSION))
+				if (file_exists($_path = $path.'l10n/'.substr(strtolower($lang),0,strpos($lang,'_')).'.php'))
 				{
 					$l10n = array();
 					include $_path;
@@ -32,14 +32,14 @@ class phpL10n
 			$lang_config = config::$config['l10n']['default'];
 			foreach (_getPaths() as $path)
 			{
-				if (file_exists($_path = $path.'private/l10n/'.strtolower($lang_config).FM_PHP_EXTENSION))
+				if (file_exists($_path = $path.'private/l10n/'.strtolower($lang_config).'.php'))
 				{
 					$l10n = array();
 					include $_path;
 					$__l10n += $l10n;
 				}
 
-				if (file_exists($_path = $path.'private/l10n/'.substr(strtolower($lang_config),0,strpos($lang_config,'_')).FM_PHP_EXTENSION))
+				if (file_exists($_path = $path.'private/l10n/'.substr(strtolower($lang_config),0,strpos($lang_config,'_')).'.php'))
 				{
 					$l10n = array();
 					include $_path;
@@ -54,14 +54,24 @@ class phpL10n
 	
 	function get($lang,$key,$args = array())
 	{
-		if (!array_key_exists($lang,phpL10n::$l10n))
+		if (!isset(phpL10n::$l10n[$lang]))
 			$this->__load($lang);
 		
-		$value = $key;
-		if (array_key_exists($key,phpL10n::$l10n[$lang]))
+		if (isset(phpL10n::$l10n[$lang][$key]))
 			$value = phpL10n::$l10n[$lang][$key];
-		
-		if (strlen($value)>=3 && $value[0]=='[' && $value[2]==']' && array_key_exists($value[1],config::$config['l10n']['parser']))
+		elseif (preg_match('/^(\w+):(.*)/',$key,$matches))
+		{
+			if (isset(phpL10n::$l10n[$lang][$matches[2]]))
+				$value = phpL10n::$l10n[$lang][$matches[2]];
+			else
+				$value = $matches[2];
+		}
+		else
+		{
+			$value = $key;
+		}
+			
+		if (strlen($value)>=3 && $value[0]=='[' && $value[2]==']' && isset(config::$config['l10n']['parser'][$value[1]]))
 			return l10n::parse(config::$config['l10n']['parser'][$value[1]],substr($value,3),$args);
 		
 		if (strlen($value)>=3 && $value[0]=='[' && $value[2]==']')

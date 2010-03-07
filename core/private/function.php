@@ -8,12 +8,12 @@ function _boot()
 	define('FM_REQUEST_ID',sha1(FM_START_TIME._ip()));
 	
 	// 2nd includes 
-	$__paths = _getPaths('private/compatibility'.FM_PHP_EXTENSION);
+	$__paths = _getPaths('private/compatibility.php');
 	array_pop($__paths);
 	foreach ($__paths as $__file)
 		include $__file;
 	
-	$__paths = _getPaths('private/function'.FM_PHP_EXTENSION);
+	$__paths = _getPaths('private/function.php');
 	array_pop($__paths);
 	foreach ($__paths as $__file)
 		include $__file;
@@ -22,29 +22,37 @@ function _boot()
 	_class('extension',false);
 	list(config::$config,extension::$extension) = _loadConfig();
 	
+	_getPaths('.',true);
+	
 	_class('log');
 	_class('cache');
 	_class('event');
-	
-	// 3rd includes 
-	foreach (_getPaths('private/boot'.FM_PHP_EXTENSION) as $__file)
-		include $__file;
-	
+	_class('html');
 	_class('l10n');
-	_class('acl');
-	_class('user');
 	_class('header',false);
+	_class('validator',false);
+	_class('user');
 	_class('auth');
+	_class('acl');
 	_class('route');
 	_class('template',false);
 	_class('view',false);
 	
+	// 3rd includes 
+	foreach (_getPaths('private/boot.php') as $__file)
+		include $__file;
+	
+	_class('form');
+	
 	$httpGet = $_GET;
-	if (array_key_exists(config::$config['clear']['key'],$httpGet))
+	
+	if (isset($httpGet[config::$config['clear']['key']]))
 		unset($httpGet[config::$config['clear']['key']]);
 	
-	$route = route::getView(array_key_exists('PATH_INFO',$_SERVER)?$_SERVER['PATH_INFO']:'/',$httpGet,config::$config['route']['magic_route']);
+	$route = route::getView(isset($_SERVER['PATH_INFO'])?$_SERVER['PATH_INFO']:'/',$httpGet,config::$config['route']['magic_route']);
 	$route = acl::routeControl(auth::getUser(),$route);
+	
+	route::$pageRoute = $route;
 	
 	return view::start($route);
 }
@@ -52,7 +60,7 @@ function _boot()
 function _shutdown()
 {
 	// shutdown includes 
-	foreach (_getPaths('private/shutdown'.FM_PHP_EXTENSION) as $__file)
+	foreach (_getPaths('private/shutdown.php') as $__file)
 		include $__file;
 }
 
@@ -65,13 +73,13 @@ function _loadConfig()
 		return array($config,$extension);
 	
 	$build_key = sha1($_SERVER['SERVER_NAME'].$_SERVER['SERVER_PORT'].$_SERVER['SCRIPT_NAME']);
-	$configCacheFile = FM_PATH_VAR."build/$build_key.config".FM_PHP_EXTENSION;
+	$configCacheFile = FM_PATH_VAR."build/$build_key.config.php";
 	
 	if (file_exists($configCacheFile))
 	{
 		include $configCacheFile;
 		
-		if (is_array($config) && array_key_exists('clear',$config) && !_clear('config',$config['clear']))
+		if (is_array($config) && isset($config['clear']) && !_clear('config',$config['clear']))
 		{
 			if (!defined('FM_SITE_DIR'))
 				define('FM_SITE_DIR',$fm_site_dir);
@@ -156,7 +164,7 @@ function _loadConfig()
 	{
 		if (!defined('FM_SITE_DIR'))
 		{
-			if (file_exists($file = $dir.FM_PHP_EXTENSION))
+			if (file_exists($file = $dir.'.php'))
 			{
 				$c = array();
 				include $file;
@@ -164,7 +172,7 @@ function _loadConfig()
 				
 				if (defined('FM_SITE_DIR'))
 				{
-					if (file_exists($file = FM_PATH_SITE.FM_SITE_DIR.'private/config'.FM_PHP_EXTENSION))
+					if (file_exists($file = FM_PATH_SITE.FM_SITE_DIR.'private/config.php'))
 					{
 						$c = array();
 						include $file;
@@ -179,7 +187,7 @@ function _loadConfig()
 				if (is_dir($dir))
 				{
 					define('FM_SITE_DIR',"$key/");
-					if (file_exists($file = "$dir/".'private/config'.FM_PHP_EXTENSION))
+					if (file_exists($file = "$dir/".'private/config.php'))
 					{
 						$c = array();
 						include $file;
@@ -197,7 +205,7 @@ function _loadConfig()
 		die();
 	}
 	
-	if (file_exists($file = FM_PATH_SITE.'default/config'.FM_PHP_EXTENSION))
+	if (file_exists($file = FM_PATH_SITE.'default/config.php'))
 	{
 		$c = array();
 		include $file;
@@ -212,7 +220,7 @@ function _loadConfig()
 	$__dirs[] = FM_PATH_SITE.'all/';
 	
 	foreach ($__dirs as $dir)
-		if (file_exists($file = $dir.'extension'.FM_PHP_EXTENSION))
+		if (file_exists($file = $dir.'extension.php'))
 		{
 			$e = array();
 			include $file;
@@ -240,7 +248,7 @@ function _loadConfig()
 	{
 		foreach ($ext_list as $ext=>$values)
 		{
-			if (!array_key_exists($ext,$ext_list))
+			if (!isset($ext_list[$ext]))
 			{
 				if (is_dir(FM_PATH_SITE."all/extension/$ext/") || is_dir(FM_PATH_SITE.FM_SITE_DIR."extension/$ext/"))
 				{
@@ -253,8 +261,8 @@ function _loadConfig()
 						$ext_list[$ext]['path'] = FM_PATH_SITE."all/extension/$ext/";
 					
 					$e = array();
-					if (file_exists($ext_list[$ext]['path'].'extension'.FM_PHP_EXTENSION))
-						include $ext_list[$ext]['path'].'extension'.FM_PHP_EXTENSION;
+					if (file_exists($ext_list[$ext]['path'].'extension.php'))
+						include $ext_list[$ext]['path'].'extension.php';
 					
 					$e += array('require'=>array(),'use'=>array());
 					$e['use'] = array_map('strtolower',array_map('trim',$e['use']));
@@ -265,14 +273,14 @@ function _loadConfig()
 					
 					foreach ($ext_list[$ext]['require'] as $require)
 					{
-						if (array_key_exists($require,$ext_list))
+						if (isset($ext_list[$require]))
 						{
 							$ext_list[$require]['required_by'][] = $ext;
 							$ext_list[$ext]['require'] = array_unique(array_merge($ext_list[$ext]['require'],$ext_list[$require]['require']));
 						}
 						else
 						{
-							if (!array_key_exists($require,$ext_list))
+							if (!isset($ext_list[$require]))
 								$ext_list[$require] = array('required_by'=>array(),'used_by'=>array());
 							
 							$ext_list[$require]['required_by'][] = $ext;
@@ -280,11 +288,11 @@ function _loadConfig()
 					}
 					foreach ($ext_list[$ext]['use'] as $use)
 					{
-						if (array_key_exists($use,$ext_list))
+						if (isset($ext_list[$use]))
 							$ext_list[$use]['used_by'][] = $ext;
 						else
 						{
-							if (!array_key_exists($use,$ext_list))
+							if (!isset($ext_list[$use]))
 								$ext_list[$use] = array('required_by'=>array(),'used_by'=>array());
 							
 							$ext_list[$use]['used_by'][] = $ext;
@@ -350,7 +358,7 @@ function _loadConfig()
 		{
 			foreach ($values['require'] as $require)
 			{
-				if (!array_key_exists($require,$extension) && !array_key_exists($require,$main_extension_list))
+				if (!isset($extension[$require]) && !isset($main_extension_list[$require]))
 				{
 					$main_extension_list[$require] = $ext_list[$require];
 				}
@@ -358,7 +366,7 @@ function _loadConfig()
 			
 			foreach ($values['use'] as $use)
 			{
-				if (!array_key_exists($use,$extension) && !array_key_exists($use,$main_extension_list) && !is_null($ext_list[$use]['path']))
+				if (!isset($extension[$use]) && !isset($main_extension_list[$use]) && !is_null($ext_list[$use]['path']))
 				{
 					$main_extension_list[$use] = $ext_list[$use];
 				}
@@ -373,7 +381,7 @@ function _loadConfig()
 	
 	foreach ($extension as $ext=>$values)
 	{
-		if (file_exists($file = $values['path'].FM_FILE_CONFIG.FM_PHP_EXTENSION))
+		if (file_exists($file = $values['path'].'private/config.php'))
 		{
 			$c = array();
 			include $file;
@@ -381,7 +389,7 @@ function _loadConfig()
 		}
 	}
 	
-	if (file_exists($file = FM_PATH_CORE.'private/config'.FM_PHP_EXTENSION))
+	if (file_exists($file = FM_PATH_CORE.'private/config.php'))
 	{
 		$c = array();
 		include $file;
@@ -400,13 +408,18 @@ function _getPaths($file = '.', $forced = false)
 {
 	static $paths = array();
 	
+	if ($forced)
+		$paths = array();
+			
 	if ($file[0]=='/')
 		$file = substr($file,1);
 	
-	if (array_key_exists($file,$paths) && !$forced)
+	if (isset($paths[$file]))
 		return $paths[$file];
+		
+
 	
-	if (!array_key_exists('.',$paths) || $forced)
+	if (!isset($paths['.']))
 	{
 		list($config,$extension) = _loadConfig();
 				
@@ -416,6 +429,13 @@ function _getPaths($file = '.', $forced = false)
 	
 		foreach($extension as $data)
 			$paths['.'][] = $data['path'];
+		
+		if (class_exists('config'))
+			if (!empty(config::$config['view']['template']))
+				if (is_dir($path = FM_PATH_SITE.FM_SITE_DIR.'template/'.config::$config['view']['template'].'/'))
+					$paths['.'][] = $path;
+				else
+					$paths['.'][] = FM_PATH_SITE.'all/template/'.config::$config['view']['template'].'/';
 		
 		$paths['.'][] = FM_PATH_CORE;
 	}
@@ -441,8 +461,8 @@ function _find($file,$forced = false)
 function _class($class, $load = true)
 {
 	$class = strtolower($class);
-	if (!class_exists($class,false) && _find("private/class/$class".FM_PHP_EXTENSION))
-		include_once _find("private/class/$class".FM_PHP_EXTENSION);
+	if (!class_exists($class,false) && _find("private/class/$class.php"))
+		include_once _find("private/class/$class.php");
 	
 	if ($load==true)
 	{
@@ -458,8 +478,8 @@ function _subClass($parrent,$class,$load = true)
 	$parrent = strtolower($parrent);
 	$class = strtolower($class);
 	
-	if (_find("private/class/$parrent/$class".FM_PHP_EXTENSION))
-		include_once _find("private/class/$parrent/$class".FM_PHP_EXTENSION);
+	if (_find("private/class/$parrent/$class.php"))
+		include_once _find("private/class/$parrent/$class.php");
 	
 	if ($load==true)
 	{
@@ -508,10 +528,10 @@ function _ip()
 	if ($ip!=false)
 		return $ip;
 
-	if(array_key_exists('HTTP_CLIENT_IP',$_SERVER) && !empty($_SERVER['HTTP_CLIENT_IP']))
+	if(isset($_SERVER['HTTP_CLIENT_IP']) && !empty($_SERVER['HTTP_CLIENT_IP']))
 		$ip = $_SERVER['HTTP_CLIENT_IP'];
 
-	if(array_key_exists('HTTP_X_FORWARDED_FOR',$_SERVER) && !empty($_SERVER['HTTP_X_FORWARDED_FOR']))
+	if(isset($_SERVER['HTTP_X_FORWARDED_FOR']) && !empty($_SERVER['HTTP_X_FORWARDED_FOR']))
 	{
 		$ips = explode(", ", $_SERVER['HTTP_X_FORWARDED_FOR']);
 		if($ip)
@@ -537,55 +557,170 @@ function _ip()
 
 function _clear($name,$config = null)
 {
-	if (!is_array($config) || !array_key_exists('key',$config))
+	if (!is_array($config) || !isset($config['key']))
 		if (class_exists('config'))
 			$config = config::$config['clear'];
 		else
 			return false;
 	
-	if (!array_key_exists($config['key'],$_GET))
+	if (!isset($_GET[$config['key']]))
 		return false;
 	
-	if (!array_key_exists($name,$config))
+	if (!isset($config[$name]))
 		$config[$name] = $name;
 	
 	return preg_match("/^({$_GET[$config['key']]})$/",$name) || preg_match("/^({$_GET[$config['key']]})$/",'all');
 }
 
-function _t($lang,$key,$args = array(),$return = false)
+function _t($lang,$key,$args = array())
 {
 	if (!class_exists('l10n') || !($value = l10n::get($lang,$key,$args)))
 		$value = $key;
 	
-	if ($return)
-		return $value;
-	
-	return _print($value);
+	return $value;
 }
 
-function _l($key,$args = array(),$return = false)
+function _l($key,$args = array())
 {
 	if (class_exists('l10n'))
-		return _t(l10n::$lang,$key,$args,$return);
+		return _t(l10n::$lang,$key,$args);
 	
-	if ($return)
-		return $key;
-	
-	return _print($key);
+	return $key;
 }
 
-function _print($value,$return = false)
+function _path($path = null)
 {
-	if ($return)
-		return _echo($value,true);
-		
-	return print _echo($value,true);
+	if ($path[0]=='/')
+		$path = substr($path,1);
+	
+	$base_uri = (dirname($_SERVER['SCRIPT_NAME'])=='/'?null:dirname($_SERVER['SCRIPT_NAME'])).'/';
+	
+	return $base_uri.$path;	
 }
 
-function _echo($value,$return = false)
+function _url($view,$arguments = array(), $decorator = array())
 {
-	if ($return)
-		return '<?php print '.var_export($value).'; ?>';
-		
-	echo '<?php print '.var_export($value).'; ?>';
+	return _path(route::getUrl($view,$arguments,$decorator,config::$config['route']['magic_route']));
+}
+
+function _pageView()
+{
+	return route::$pageRoute[0];
+}
+
+function _pageStatus()
+{
+	return route::$pageRoute[1];
+}
+
+function _pageExtension()
+{
+	return route::$pageRoute[2];
+}
+
+function _pageData()
+{
+	return route::$pageRoute[3];
+}
+
+function _pageEnvironment()
+{
+	return route::$pageRoute[4];
+}
+
+function _attribute($data)
+{
+	return addslashes($data);
+}
+
+function _redirect($url,$code = 302)
+{
+	log::message('redirect');
+	header::set('Status',$code,true);
+	header::set('Location',$url,true);
+	
+}
+
+function _thisPage()
+{
+	return _url(_pageView(),_pageData());
+}
+// view functions
+
+function t($lang,$key,$args = array(),$addslashes = false)
+{
+	if ($args===true)
+	{
+		$args = array();
+		$addslashes = true;
+	}
+	if ($addslashes)
+		echo '<?php echo _attribute(l10n::get('.var_export($lang,true).','.var_export($key,true).','.var_export($args,true).')); ?>';
+	else
+		echo '<?php echo l10n::get('.var_export($lang,true).','.var_export($key,true).','.var_export($args,true).'); ?>';
+}
+
+function l($key,$args = array(),$addslashes = false)
+{
+	if ($args===true)
+	{
+		$args = array();
+		$addslashes = true;
+	}
+	if ($addslashes)
+		echo '<?php echo _attribute(l10n::get($view->l10n,'.var_export($key,true).','.var_export($args,true).')); ?>';
+	else
+		echo '<?php echo l10n::get($view->l10n,'.var_export($key,true).','.var_export($args,true).'); ?>';
+}
+
+function show($value,$addslashes = false)
+{
+	if ($addslashes)
+		echo '<?php echo _attribute('.var_export($value,true).'); ?>';
+	else
+		echo '<?php echo '.var_export($value,true).'; ?>';
+}
+
+function path($path = null,$addslashes = false)
+{
+	if ($path===true)
+	{
+		$path = null;
+		$addslashes = true;
+	}
+	
+	show(_path($path),$addslashes);
+}
+
+function url($view,$arguments = array(),$decorators = array(),$addslashes = false)
+{
+	if ($arguments == true)
+	{
+		$arguments = array();
+		$decorators = array();
+		$addslashes = true;
+	} elseif ($decorators == true)
+	{
+		$decorators = array();
+		$addslashes = true;
+	}
+	if ($addslashes)
+		echo '<?php echo _attribute(_url('.var_export($view,true).','.var_export($arguments,true).','.var_export($decorators,true).')); ?>';
+	else
+		echo '<?php echo _url('.var_export($view,true).','.var_export($arguments,true).','.var_export($decorators,true).'); ?>';
+}
+
+function find($file,$addslashes = false)
+{
+	show(_path(_find($file)));
+}
+
+function part($__part,$__arguments = null)
+{
+	echo '<?php echo $view->select('.var_export($__part,true).','.var_export($__arguments,true).'); ?>';
+}
+
+function form($form)
+{
+	echo '<?php form::get($view,'.var_export($form,true).'); ?>';
 }

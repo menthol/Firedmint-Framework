@@ -15,9 +15,6 @@ class auth
 	
 	static function getUser()
 	{
-		if (is_object(auth::$o))
-			return auth::$o->getUser();
-		
-		return user::anonymous();
+		return auth::$o->getUser();
 	}
 }

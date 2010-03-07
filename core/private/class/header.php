@@ -3,6 +3,8 @@ if (!defined('FM_SECURITY')) die();
 
 class header
 {
+	public static $showContent = true;
+	
 	public  static $headers = array (
 		'Cache-Control'       => array('no-cache, must-revalidate',false),
 		'Content-Encoding'    => array(null,false),
@@ -351,7 +353,7 @@ class header
 	
 	static function set($key,$value = null,$lock = false)
 	{
-		if (array_key_exists($key,header::$headers) && !header::$headers[$key][1])
+		if (isset(header::$headers[$key]) && !header::$headers[$key][1])
 			header::$headers[$key] = array($value,$lock);
 	}
 	
@@ -369,14 +371,19 @@ class header
 		if (empty(header::$headers['Content-Type'][0]))
 			header::set('Content-Type','text/html; charset=utf-8');
 			
-		if (array_key_exists(header::$headers['Content-Type'][0],header::$mimeCodes))
+		if (isset(header::$mimeCodes[header::$headers['Content-Type'][0]]))
 			header::set('Content-Type',header::$mimeCodes[header::$headers['Content-Type'][0]]);
 		
-		if (array_key_exists('Status',header::$headers) && is_numeric(header::$headers['Status'][0]))
+		if (isset(header::$headers['Status']) && is_numeric(header::$headers['Status'][0]))
 		{
 			@header('x',true,header::$headers['Status'][0]);
+			if (in_array(header::$headers['Status'],array(300,301,302,303,307)))
+				header::$showContent = false;
+			
 			unset(header::$headers['Status']);
 		}
+		
+		
 		
 		foreach (header::$headers as $key=>$header)
 			if (!empty($header[0]))

@@ -4,6 +4,7 @@ if (!defined('FM_SECURITY')) die();
 class route
 {
 	public  static  $o;
+	public  static  $pageRoute; 
 	
 	static function factory()
 	{
@@ -15,7 +16,11 @@ class route
 	
 	static function getView($uri,$GetArgs,$magicRoute)
 	{
-		if (is_object(route::$o))
-			return route::$o->getView($uri,$GetArgs,$magicRoute);
+		return route::$o->getView($uri,$GetArgs,$magicRoute);
+	}
+	
+	static function getUrl($view,$arguments = array(),$decorators = array(),$magicRoute = null)
+	{
+		return route::$o->getUrl($view,$arguments,$decorators,$magicRoute);
 	}
 }

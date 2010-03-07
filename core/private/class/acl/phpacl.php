@@ -17,7 +17,7 @@ class phpAcl
 			if (!is_array($__acl = cache::getStatic('phpacl','static_acl')))
 				$__acl = array();
 			
-			foreach (_getPaths('private/acl'.FM_PHP_EXTENSION) as $file)
+			foreach (_getPaths('private/acl.php') as $file)
 			{
 				$acl = array();
 				include $file;
@@ -30,10 +30,10 @@ class phpAcl
 		
 	function user($user,$roleGroup,$role)
 	{
-		if (array_key_exists($user,phpAcl::$acl['user']) && array_key_exists($roleGroup,phpAcl::$acl['user'][$user]) && array_key_exists($role,phpAcl::$acl['user'][$user][$roleGroup]))
+		if (isset(phpAcl::$acl['user'][$user][$roleGroup][$role]))
 			return phpAcl::$acl['user'][$user][$roleGroup][$role];
 		
-		if (array_key_exists($user,phpAcl::$acl['user']) && array_key_exists($roleGroup,phpAcl::$acl['user'][$user]) && array_key_exists('*',phpAcl::$acl['user'][$user][$roleGroup]))
+		if (isset(phpAcl::$acl['user'][$user][$roleGroup]['*']))
 			return phpAcl::$acl['user'][$user][$roleGroup]['*'];
 		
 		if (!is_object($user = user::get($user)) || !isset($user->group))
@@ -44,10 +44,10 @@ class phpAcl
 	
 	function group($group,$roleGroup,$role)
 	{
-		if (array_key_exists($group,phpAcl::$acl['group']) && array_key_exists($roleGroup,phpAcl::$acl['group'][$group]) && array_key_exists($role,phpAcl::$acl['group'][$group][$roleGroup]))
+		if (isset(phpAcl::$acl['group'][$group][$roleGroup][$role]))
 			return phpAcl::$acl['group'][$group][$roleGroup][$role];
 		
-		if (array_key_exists($group,phpAcl::$acl['group']) && array_key_exists($roleGroup,phpAcl::$acl['group'][$group]) && array_key_exists('*',phpAcl::$acl['group'][$group][$roleGroup]))
+		if (isset(phpAcl::$acl['group'][$group][$roleGroup]['*']))
 			return phpAcl::$acl['group'][$group][$roleGroup]['*'];
 		
 		return acl::all($roleGroup,$role);
@@ -55,10 +55,10 @@ class phpAcl
 	
 	function all($roleGroup,$role)
 	{
-		if (array_key_exists('*',phpAcl::$acl['group']) && array_key_exists($roleGroup,phpAcl::$acl['group']['*']) && array_key_exists($role,phpAcl::$acl['group']['*'][$roleGroup]))
+		if (isset(phpAcl::$acl['group']['*'][$roleGroup][$role]))
 			return phpAcl::$acl['group']['*'][$roleGroup][$role];
 		
-		if (array_key_exists('*',phpAcl::$acl['group']) && array_key_exists($roleGroup,phpAcl::$acl['group']['*']) && array_key_exists('*',phpAcl::$acl['group']['*'][$roleGroup]))
+		if (isset(phpAcl::$acl['group']['*'][$roleGroup]['*']))
 			return phpAcl::$acl['group']['*'][$roleGroup]['*'];
 	}
 	
