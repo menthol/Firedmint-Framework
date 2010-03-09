@@ -7,7 +7,7 @@ class FmLog
 	
 	static function factory()
 	{
-		set_error_handler(array('log','errorHandler'));
+		set_error_handler(array('FmLog','errorHandler'));
 	}
 	
 	static function errorHandler($errno, $errstr, $errfile, $errline) {
