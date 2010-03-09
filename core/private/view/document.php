@@ -4,7 +4,7 @@ if (!defined('FM_SECURITY')) die();
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php l('xml-lang',true); ?>" lang="<?php l('xml-lang',true); ?>" dir="<?php l('lang-dir',true); ?>">
 <head>
 <?php $view->part('part/head'); ?>
-<?php html::head(); ?>
+<?php FmHtml::head(); ?>
 <?php $view->virtual('head'); ?>
 <?php $view->part('part/head-script'); ?>
 <?php $view->part("head/$view->name"); ?>

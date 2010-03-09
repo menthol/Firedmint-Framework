@@ -33,12 +33,12 @@ require_once FM_PATH_CORE.'private/function.php';
 // Firedmint Live sequance
 $__content = _boot();
 ob_end_clean();
-header::send();
+FmHeader::send();
 @ini_set('zlib.output_compression_level', 1);
-if(!config::$config['header']['page_compression'] || !ob_start("ob_gzhandler"))
+if(!FmConfig::$config['header']['page_compression'] || !ob_start("ob_gzhandler"))
 	ob_start();
 
-if (header::$showContent)
+if (FmHeader::$showContent)
 	echo $__content;
 
 ob_end_flush();

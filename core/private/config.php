@@ -8,13 +8,13 @@ $c['log'] = array(
 );
 
 $c['cache'] = array(
-	'value_engine'         => 'phpValueCache',
+	'value_engine'         => 'FmPhpValueCache',
 	'value_lifetime'       => 2629743,
-	'front_engine'         => 'phpFrontCache',
+	'front_engine'         => 'FmPhpFrontCache',
 	'front_lifetime'       => 1800,
-	'file_engine'          => 'phpFileCache',
+	'file_engine'          => 'FmPhpFileCache',
 	'file_lifetime'        => 2629743,
-	'static_engine'        => 'phpStaticCache',
+	'static_engine'        => 'FmPhpStaticCache',
 	'var_private'          => FM_PATH_VAR.'private/',
 	'var_public'           => FM_PATH_VAR.'public/',
 	'static_private'       => FM_PATH_STATIC.'private/',
@@ -40,23 +40,23 @@ $c['clear'] = array(
 );
 
 $c['user'] = array(
-	'engine'               => 'phpUser',
+	'engine'               => 'FmPhpUser',
 	'cache_lifetime'       => 20,
 );
 
 $c['auth'] = array(
-	'engine'               => 'digestAuth',
+	'engine'               => 'FmDigestAuth',
 	'max_idle_time'        => 1800,
 	'fail_login_route'     => '__403',
 );
 
 $c['acl'] = array(
-	'engine'               => 'phpAcl',
+	'engine'               => 'FmPhpAcl',
 	'cache_lifetime'       => 1800,
 );
 
 $c['route'] = array(
-	'engine'               => 'phpRoute',
+	'engine'               => 'FmPhpRoute',
 	'cache_lifetime'       => 1800,
 	'404_route'            => '__404',
 	'magic_route'          => false,
@@ -66,15 +66,15 @@ $c['route'] = array(
 );
 
 $c['l10n'] = array(
-	'engine'               => 'phpl10n',
+	'engine'               => 'FmPhpl10n',
 	'cache_lifetime'       => 1800,
 	'default'              => 'en_US',
-	'parser'               => array('%'=>'printfParser','default'=>'printfParser'),
+	'parser'               => array('%'=>'FmPrintfParser','default'=>'FmPrintfParser'),
 );
 
 $c['view'] = array(
 	'cache_lifetime'       => 1800,
-	'compilator'           => array('php'=>'phpTemplate'),
+	'compilator'           => array('php'=>'FmPhpTemplate'),
 	'template'             => null,
 );
 
