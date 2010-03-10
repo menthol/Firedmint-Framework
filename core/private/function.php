@@ -18,44 +18,45 @@ function _boot()
 	foreach ($__paths as $__file)
 		include $__file;
 		
-	_class('FmConfig',false);
-	_class('FmExtension',false);
-	list(FmConfig::$config,FmExtension::$extension) = _loadConfig();
+	_class('config',false);
+	_class('extension',false);
+	list(config::$config,extension::$extension) = _loadConfig();
 	
 	_getPaths('.',true);
 	
-	_class('FmLog');
-	_class('FmCache');
-	_class('FmEvent');
-	_class('FmHtml');
-	_class('FmL10n');
-	_class('FmHeader',false);
-	_class('FmValidator',false);
-	_class('FmUser');
-	_class('FmAuth');
-	_class('FmAcl');
-	_class('FmRoute');
-	_class('FmTemplate',false);
-	_class('FmView',false);
+	_class('log');
+	_class('cache');
+	_class('model');
+	_class('modelMagic');
+	_class('event');
+	_class('html');
+	_class('l10n');
+	_class('header',false);
+	_class('validator',false);
+	_class('user');
+	_class('auth');
+	_class('acl');
+	_class('route');
+	_class('template',false);
+	_class('view',false);
 	
 	// 3rd includes 
 	foreach (_getPaths('private/boot.php') as $__file)
 		include $__file;
 	
-	_class('FmForm');
+	_class('form');
 	
 	$httpGet = $_GET;
 	
-	if (isset($httpGet[FmConfig::$config['clear']['key']]))
-		unset($httpGet[FmConfig::$config['clear']['key']]);
+	if (isset($httpGet[config::$config['clear']['key']]))
+		unset($httpGet[config::$config['clear']['key']]);
 	
-	$route = FmRoute::getView(isset($_SERVER['PATH_INFO'])?$_SERVER['PATH_INFO']:'/',$httpGet,FmConfig::$config['route']['magic_route']);
+	$route = route::getView(isset($_SERVER['PATH_INFO'])?$_SERVER['PATH_INFO']:'/',$httpGet,config::$config['route']['magic_route']);
+	$route = acl::routeControl(auth::getUser(),$route);
 	
-	FmRoute::$pageRoute = $route;
+	route::$pageRoute = $route;
 	
-	$route = FmAcl::routeControl(FmAuth::getUser(),$route);
-	
-	return FmView::start($route);
+	return view::start($route);
 }
 
 function _shutdown()
@@ -188,7 +189,7 @@ function _loadConfig()
 				if (is_dir($dir))
 				{
 					define('FM_SITE_DIR',"$key/");
-					if (file_exists($file = "$dir/private/config.php"))
+					if (file_exists($file = "$dir/".'private/config.php'))
 					{
 						$c = array();
 						include $file;
@@ -390,13 +391,6 @@ function _loadConfig()
 		}
 	}
 	
-	if (file_exists($file = 'site/all/private/config.php'))
-	{
-		$c = array();
-		include $file;
-		$__config = array_replace_recursive($c,$__config);
-	}
-	
 	if (file_exists($file = FM_PATH_CORE.'private/config.php'))
 	{
 		$c = array();
@@ -438,12 +432,12 @@ function _getPaths($file = '.', $forced = false)
 		foreach($extension as $data)
 			$paths['.'][] = $data['path'];
 		
-		if (class_exists('FmConfig'))
-			if (!empty(FmConfig::$config['view']['template']))
-				if (is_dir($path = FM_PATH_SITE.FM_SITE_DIR.'template/'.FmConfig::$config['view']['template'].'/'))
+		if (class_exists('config'))
+			if (!empty(config::$config['view']['template']))
+				if (is_dir($path = FM_PATH_SITE.FM_SITE_DIR.'template/'.config::$config['view']['template'].'/'))
 					$paths['.'][] = $path;
 				else
-					$paths['.'][] = FM_PATH_SITE.'all/template/'.FmConfig::$config['view']['template'].'/';
+					$paths['.'][] = FM_PATH_SITE.'all/template/'.config::$config['view']['template'].'/';
 		
 		$paths['.'][] = FM_PATH_CORE;
 	}
@@ -566,8 +560,8 @@ function _ip()
 function _clear($name,$config = null)
 {
 	if (!is_array($config) || !isset($config['key']))
-		if (class_exists('FmConfig'))
-			$config = FmConfig::$config['clear'];
+		if (class_exists('config'))
+			$config = config::$config['clear'];
 		else
 			return false;
 	
@@ -582,7 +576,7 @@ function _clear($name,$config = null)
 
 function _t($lang,$key,$args = array())
 {
-	if (!class_exists('FmL10n') || !($value = FmL10n::get($lang,$key,$args)))
+	if (!class_exists('l10n') || !($value = l10n::get($lang,$key,$args)))
 		$value = $key;
 	
 	return $value;
@@ -590,8 +584,8 @@ function _t($lang,$key,$args = array())
 
 function _l($key,$args = array())
 {
-	if (class_exists('FmL10n'))
-		return _t(FmL10n::$lang,$key,$args);
+	if (class_exists('l10n'))
+		return _t(l10n::$lang,$key,$args);
 	
 	return $key;
 }
@@ -608,32 +602,32 @@ function _path($path = null)
 
 function _url($view,$arguments = array(), $decorator = array())
 {
-	return _path(FmRoute::getUrl($view,$arguments,$decorator,FmConfig::$config['route']['magic_route']));
+	return _path(route::getUrl($view,$arguments,$decorator,config::$config['route']['magic_route']));
 }
 
 function _pageView()
 {
-	return FmRoute::$pageRoute[0];
+	return route::$pageRoute[0];
 }
 
 function _pageStatus()
 {
-	return FmRoute::$pageRoute[1];
+	return route::$pageRoute[1];
 }
 
 function _pageExtension()
 {
-	return FmRoute::$pageRoute[2];
+	return route::$pageRoute[2];
 }
 
 function _pageData()
 {
-	return FmRoute::$pageRoute[3];
+	return route::$pageRoute[3];
 }
 
 function _pageEnvironment()
 {
-	return FmRoute::$pageRoute[4];
+	return route::$pageRoute[4];
 }
 
 function _attribute($data)
@@ -643,14 +637,23 @@ function _attribute($data)
 
 function _redirect($url,$code = 302)
 {
-	FmHeader::set('Status',$code,true);
-	FmHeader::set('Location',$url,true);
+	header::set('Status',$code,true);
+	header::set('Location',$url,true);
 }
 
 function _thisPage()
 {
 	return _url(_pageView(),_pageData());
 }
+
+function _model($table)
+{
+	$return = _class('modelMagic');
+	$return->setModel($table);
+	
+	return $return;
+}
+
 // view functions
 
 function t($lang,$key,$args = array(),$addslashes = false)
@@ -661,9 +664,9 @@ function t($lang,$key,$args = array(),$addslashes = false)
 		$addslashes = true;
 	}
 	if ($addslashes)
-		echo '<?php echo _attribute(FmL10n::get('.var_export($lang,true).','.var_export($key,true).','.var_export($args,true).')); ?>';
+		echo '<?php echo _attribute(l10n::get('.var_export($lang,true).','.var_export($key,true).','.var_export($args,true).')); ?>';
 	else
-		echo '<?php echo FmL10n::get('.var_export($lang,true).','.var_export($key,true).','.var_export($args,true).'); ?>';
+		echo '<?php echo l10n::get('.var_export($lang,true).','.var_export($key,true).','.var_export($args,true).'); ?>';
 }
 
 function l($key,$args = array(),$addslashes = false)
@@ -674,9 +677,9 @@ function l($key,$args = array(),$addslashes = false)
 		$addslashes = true;
 	}
 	if ($addslashes)
-		echo '<?php echo _attribute(FmL10n::get($view->l10n,'.var_export($key,true).','.var_export($args,true).')); ?>';
+		echo '<?php echo _attribute(l10n::get($view->l10n,'.var_export($key,true).','.var_export($args,true).')); ?>';
 	else
-		echo '<?php echo FmL10n::get($view->l10n,'.var_export($key,true).','.var_export($args,true).'); ?>';
+		echo '<?php echo l10n::get($view->l10n,'.var_export($key,true).','.var_export($args,true).'); ?>';
 }
 
 function show($value,$addslashes = false)
@@ -728,5 +731,5 @@ function part($__part,$__arguments = null)
 
 function form($form)
 {
-	echo '<?php FmForm::get($view,'.var_export($form,true).'); ?>';
+	echo '<?php form::get($view,'.var_export($form,true).'); ?>';
 }

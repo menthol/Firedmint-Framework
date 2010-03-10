@@ -1,4 +1,7 @@
-<?php 
+<?php
 if (!defined('FM_SECURITY')) die();
 
-return '403';
+class validator
+{
+	
+}

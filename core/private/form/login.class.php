@@ -12,9 +12,9 @@ class loginForm
 	{
 		$return = true;
 		
-		if (!FmUser::exists(FmForm::getValue($formName,'username')))
+		if (!user::exists(form::getValue($formName,'username')))
 			$return = false;
-		else if (!FmUser::check(FmForm::getValue($formName,'username'),FmForm::getValue($formName,'password')))
+		else if (!user::check(form::getValue($formName,'username'),form::getValue($formName,'password')))
 			$return = false;
 		
 		return $return;
@@ -22,6 +22,6 @@ class loginForm
 	
 	static function process($formName)
 	{
-		FmEvent::trigger('form','login:process','before|after',$formName,FmForm::getValue($formName,'username'));
+		event::trigger('form','login:process','before|after',$formName,form::getValue($formName,'username'));
 	}
 }

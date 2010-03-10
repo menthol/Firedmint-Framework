@@ -8,13 +8,13 @@ $c['log'] = array(
 );
 
 $c['cache'] = array(
-	'value_engine'         => 'FmPhpValueCache',
+	'value_engine'         => 'phpValueCache',
 	'value_lifetime'       => 2629743,
-	'front_engine'         => 'FmPhpFrontCache',
+	'front_engine'         => 'phpFrontCache',
 	'front_lifetime'       => 1800,
-	'file_engine'          => 'FmPhpFileCache',
+	'file_engine'          => 'phpFileCache',
 	'file_lifetime'        => 2629743,
-	'static_engine'        => 'FmPhpStaticCache',
+	'static_engine'        => 'phpStaticCache',
 	'var_private'          => FM_PATH_VAR.'private/',
 	'var_public'           => FM_PATH_VAR.'public/',
 	'static_private'       => FM_PATH_STATIC.'private/',
@@ -40,23 +40,23 @@ $c['clear'] = array(
 );
 
 $c['user'] = array(
-	'engine'               => 'FmPhpUser',
+	'engine'               => 'phpUser',
 	'cache_lifetime'       => 20,
 );
 
 $c['auth'] = array(
-	'engine'               => 'FmDigestAuth',
+	'engine'               => 'digestAuth',
 	'max_idle_time'        => 1800,
 	'fail_login_route'     => '__403',
 );
 
 $c['acl'] = array(
-	'engine'               => 'FmPhpAcl',
+	'engine'               => 'phpAcl',
 	'cache_lifetime'       => 1800,
 );
 
 $c['route'] = array(
-	'engine'               => 'FmPhpRoute',
+	'engine'               => 'phpRoute',
 	'cache_lifetime'       => 1800,
 	'404_route'            => '__404',
 	'magic_route'          => false,
@@ -66,15 +66,15 @@ $c['route'] = array(
 );
 
 $c['l10n'] = array(
-	'engine'               => 'FmPhpl10n',
+	'engine'               => 'phpl10n',
 	'cache_lifetime'       => 1800,
 	'default'              => 'en_US',
-	'parser'               => array('%'=>'FmPrintfParser','default'=>'FmPrintfParser'),
+	'parser'               => array('%'=>'printfParser','default'=>'printfParser'),
 );
 
 $c['view'] = array(
 	'cache_lifetime'       => 1800,
-	'compilator'           => array('php'=>'FmPhpTemplate'),
+	'compilator'           => array('php'=>'phpTemplate'),
 	'template'             => null,
 );
 
@@ -90,4 +90,10 @@ $c['html'] = array(
 
 $c['form'] = array(
 	'form_lifetime'       => 1800, 
+);
+
+$c['model'] = array(
+	'default_connexion'   => 'default',
+	'die_route'           => '__500',
+	'cache_lifetime'      => 300,
 );
