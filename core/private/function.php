@@ -494,8 +494,8 @@ function _subClass($parrent,$class,$load = true)
 
 function _createDir($path)
 {
-	$path = dirname($path);
-	
+	$path = str_replace('\\', '/',dirname($path));
+
 	if (is_dir($path))
 		return true;
 		
@@ -595,7 +595,7 @@ function _path($path = null)
 	if ($path[0]=='/')
 		$path = substr($path,1);
 	
-	$base_uri = (dirname($_SERVER['SCRIPT_NAME'])=='/'?null:dirname($_SERVER['SCRIPT_NAME'])).'/';
+	$base_uri = (str_replace('\\', '/',dirname($_SERVER['SCRIPT_NAME']))=='/'?null:dirname($_SERVER['SCRIPT_NAME'])).'/';
 	
 	return $base_uri.$path;	
 }

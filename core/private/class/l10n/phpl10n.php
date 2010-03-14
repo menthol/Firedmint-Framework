@@ -15,14 +15,14 @@ class phpL10n
 			
 			foreach (_getPaths() as $path)
 			{
-				if (file_exists($_path = $path.'l10n/'.strtolower($lang).'.php'))
+				if (file_exists($_path = $path.'private/l10n/'.strtolower($lang).'.php'))
 				{
 					$l10n = array();
 					include $_path;
 					$__l10n += $l10n;
 				}
 
-				if (file_exists($_path = $path.'l10n/'.substr(strtolower($lang),0,strpos($lang,'_')).'.php'))
+				if (file_exists($_path = $path.'private/l10n/'.substr(strtolower($lang),0,strpos($lang,'_')).'.php'))
 				{
 					$l10n = array();
 					include $_path;
