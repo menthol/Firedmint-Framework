@@ -643,6 +643,7 @@ function _redirect($url,$code = 302)
 {
 	header::set('Status',$code,true);
 	header::set('Location',$url,true);
+	header::setAlternateContent('');
 }
 
 function _thisPage()
@@ -707,20 +708,20 @@ function path($path = null,$addslashes = false)
 
 function url($view,$arguments = array(),$decorators = array(),$addslashes = false)
 {
-	if ($arguments == true)
+	if ($arguments === true)
 	{
 		$arguments = array();
 		$decorators = array();
 		$addslashes = true;
-	} elseif ($decorators == true)
+	} elseif ($decorators === true)
 	{
 		$decorators = array();
 		$addslashes = true;
 	}
 	if ($addslashes)
-		echo '<?php echo _attribute(_url('.var_export($view,true).','.var_export($arguments,true).','.var_export($decorators,true).')); ?>';
+		echo '<?php echo _attribute(_url('.var_export($view,true).','.var_export($arguments,true).' + array(\'l10n\'=>$view->l10n),'.var_export($decorators,true).')); ?>';
 	else
-		echo '<?php echo _url('.var_export($view,true).','.var_export($arguments,true).','.var_export($decorators,true).'); ?>';
+		echo '<?php echo _url('.var_export($view,true).','.var_export($arguments,true).' + array(\'l10n\'=>$view->l10n),'.var_export($decorators,true).'); ?>';
 }
 
 function find($file,$addslashes = false)

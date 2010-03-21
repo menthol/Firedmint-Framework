@@ -93,7 +93,6 @@ class phpRoute
 	
 	function getUrl($view,$arguments = array(),$decorators = array())
 	{
-		
 		if (isset(phpRoute::$inverse[$view]))
 		{
 			$routes = array();
@@ -173,6 +172,11 @@ class phpRoute
 			return "/$view".(count($urlArgs)>0?'/'.implode('/',$urlArgs):null).(count($queryArgs)>0?'?'.http_build_query($queryArgs,'__','&'):null);
 		}
 		
+		if (!empty($view))
+		{
+			$arguments['view'] = $view;
+		}
+		
 		return "/".(count($arguments)>0?'?'.http_build_query($arguments,'__','&'):null);
 	}
 	
@@ -201,7 +205,7 @@ class phpRoute
 			$arguments = array();
 			$status = 200;
 			
-			if (count($path_keys)>0)
+			if (count($path_keys)>0 && ($url!='/' || !isset($httpGet['view']) || empty($httpGet['view'])))
 			{
 				list($view,$status,$extensions,$urlArguments,$routeArguments,$route,$regex) = phpRoute::$regex[$path_keys[0]];
 				preg_match($regex,$url,$matches);
@@ -220,6 +224,12 @@ class phpRoute
 				$view = array_shift($args);
 				$arguments = array('params'=>$args) + $httpGet;
 				$params = array('url'=>$url,'view'=>$view,'params'=>$args);
+			}
+			elseif(isset($httpGet['view']))
+			{
+				$view = $httpGet['view'];
+				$arguments = $httpGet;
+				$params = array('url'=>$url,'view'=>$view,'params'=>array());
 			}
 			else
 			{
