@@ -602,7 +602,11 @@ function _path($path = null)
 
 function _url($view,$arguments = array(), $decorator = array())
 {
-	return _path(route::getUrl($view,$arguments,$decorator,config::$config['route']['magic_route']));
+	$route = route::getUrl($view,$arguments,$decorator,config::$config['route']['magic_route']);
+	if ($route=='/')
+		return _path();
+	
+	return _path(config::$config['route']['url_base'].$route);
 }
 
 function _pageView()

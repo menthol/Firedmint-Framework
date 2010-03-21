@@ -63,6 +63,7 @@ $c['route'] = array(
 	'magic_view'           => '.*',
 	'default_extension'    => 'html',
 	'show_extension'       => false,
+	'url_base'             => isset($_SERVER['FM_REWRITEURLS'])?null:'/firedmint.php',
 );
 
 $c['l10n'] = array(
