@@ -142,7 +142,7 @@ class phpRoute
 						
 						foreach ($routeData[3] as $argument=>$pattern)
 						{
-							$regex[] = $pattern;
+							$regex[] = "#%$argument%#";
 							$replacement[] =  $fullArgs[$argument];
 							unset($fullArgs[$argument]);
 						}

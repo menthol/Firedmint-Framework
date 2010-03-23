@@ -59,7 +59,7 @@ class phpL10n
 		
 		if (isset(phpL10n::$l10n[$lang][$key]))
 			$value = phpL10n::$l10n[$lang][$key];
-		elseif (preg_match('/^(\w+):(.*)/',$key,$matches))
+		elseif (preg_match('/^([-_\w]+):(.*)/',$key,$matches))
 		{
 			if (isset(phpL10n::$l10n[$lang][$matches[2]]))
 				$value = phpL10n::$l10n[$lang][$matches[2]];
