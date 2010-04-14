@@ -210,7 +210,7 @@ class mysqlDriver
 				$__values[$field] = "'".$this->escape($params)."'";
 		}
 		
-		$sql = "INSERT INTO `$table` (".implode(', ',array_keys($__values)).") VALUES (".implode(", ",$__values).')';
+		$sql = "INSERT INTO `$table` (`".implode('`, `',array_keys($__values))."`) VALUES (".implode(", ",$__values).')';
 		
 		return $this->query[$this->query($sql)]['insert_id'];  
 	}

@@ -151,7 +151,11 @@ class phpRoute
 							unset($fullArgs[$argument]);
 						
 						foreach (array_keys($decorators) as $argument)
-							unset($fullArgs[$argument]);
+							if (!isset($arguments[$argument]))
+								unset($fullArgs[$argument]);
+						
+						if (isset($fullArgs['l10n']) && $fullArgs['l10n']==config::$config['l10n']['default'])
+							unset($fullArgs['l10n']);
 						
 						return preg_replace($regex,$replacement,$url).(count($fullArgs)>0?'?'.http_build_query($fullArgs,'__','&'):null);
 					}

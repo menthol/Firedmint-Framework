@@ -42,6 +42,12 @@ $c['clear'] = array(
 $c['user'] = array(
 	'engine'               => 'phpUser',
 	'cache_lifetime'       => 20,
+	'model'                => 'users',
+	'user_field'           => 'user',
+	'password_field'       => 'password',
+	'name_field'           => 'name',
+	'group_field'          => 'group',
+
 );
 
 $c['auth'] = array(

@@ -3,31 +3,26 @@ if (!defined('FM_SECURITY')) die();
 
 class form
 {
+	
 	static $form = array();
 	static $element_id = 0;
+	
+	const NONE        = 0;
+	const LOADED      = 1;
+	const POSTED      = 2;
+	const PARTIAL     = 4;
+	const VALIDATE    = 8;
+	const FAILED      = 16;
+	const PROCESS     = 32;
+	const PROCESSED   = 64;
 	
 	static function factory()
 	{
 		if (isset($_POST['__formid']))
 		{
 			$formName = base64_decode($_POST['__formid']);
-			
-			form::$form[$formName] = form::getDefinition($formName);
-			form::setValues($formName,$_POST);
-			
-			if (form::getState($formName)==3)
-			{
-				foreach(form::$form[$formName]['processer'] as $processer)
-				{
-					$callback  = array_shift($processer);
-					array_unshift($processer,$formName);
-					if (is_callable($callback))
-						call_user_func_array($callback,$processer);
-					
-					
-				}
-			}
-			form::$form[$formName]['state'] = 4;
+			if (!isset(form::$form[$formName]))
+				form::getState($formName);
 		}
 	}
 	
@@ -78,56 +73,80 @@ class form
 		
 		event::trigger('form',"def:$formName",'after',$__form);
 		
-		return $__form + array('loader' => array(),'validator' => array(),'processer' => array(),'element' => array(),'group'=>array(),'action'=>null,'onprocess'=>null,'static'=>false,'state'=>0,'error'=>array());
+		return $__form + array('loader' => array(),'validator' => array(),'processer' => array(),'element' => array(),'group'=>array(),'action'=>null,'onprocess'=>null,'static'=>false,'state'=>self::NONE,'error'=>array(),'html'=>null);
 	}
 	
 	static function getState($formName)
 	{
-		/* 0 => new form
-		 * 1 => partially posted
-		 * 2 => fully posted but fail on validators
-		 * 3 => fully posted and success on validators
-		 * 4 => processed
-		 */
-		
 		$formName = strtolower($formName);
 		if (isset(form::$form[$formName]) && form::$form[$formName]['state']>0)
 			return form::$form[$formName]['state'];
-		
-		$state = 0;
-		$definition = form::getDefinition($formName);
+
+		form::$form[$formName] = form::getDefinition($formName);
+		form::$form[$formName]['state'] = self::LOADED;
 		
 		if (isset($_POST['__formid']) && $_POST['__formid']==base64_encode($formName))
 		{
-			$state = 2;
-			foreach ($definition['element'] as $element=>$data)
+			form::setValues($formName,$_POST);
+			form::$form[$formName]['state'] |= self::POSTED;
+			
+			foreach (form::$form[$formName]['element'] as $element=>$data)
 				if (!isset($_POST[$element]) || (empty($_POST[$element]) && $data['required']==true))
-					$state = 1;
+					form::$form[$formName]['state'] |= self::PARTIAL;
 			
-			
-			if ($state == 2) $state = 3;
-			foreach ($definition['element'] as $element=>$data)
+			foreach (form::$form[$formName]['element'] as $element=>$data)
 			{
 				foreach ($data['validator'] as $validator)
 				{
 					$__callback  = array_shift($validator);
 					array_unshift($validator,$formName,$element);
-					if ((is_callable($callback = array('validator',$__callback)) || is_callable($callback = $__callback)) && !call_user_func_array($callback,$validator) && $state==3)
-						$state = 2;
+					if ((is_callable($callback = array('validator',$__callback)) || is_callable($callback = $__callback)) && !call_user_func_array($callback,$validator))
+					{
+						form::$form[$formName]['state'] |= self::FAILED;
+					}
 				}
 			}
-			
-			foreach($definition['validator'] as $validator)
+
+			foreach(form::$form[$formName]['validator'] as $validator)
 			{
 				$__callback  = array_shift($validator);
 				array_unshift($validator,$formName);
-				if ((is_callable($callback = array('validator',$__callback)) || is_callable($callback = $__callback)) && !call_user_func_array($callback,$validator) && $state==3)
-					$state = 2;
+				if ((is_callable($callback = array('validator',$__callback)) || is_callable($callback = $__callback)) && !call_user_func_array($callback,$validator))
+				{	
+					form::$form[$formName]['state'] |= self::FAILED;
+				}
+			}
+			
+			if (!(form::$form[$formName]['state'] & self::PARTIAL) && !(form::$form[$formName]['state'] & self::FAILED))
+			{
+				form::$form[$formName]['state'] |= self::PROCESS;
+				foreach(form::$form[$formName]['processer'] as $processer)
+				{
+					$callback  = array_shift($processer);
+					array_unshift($processer,$formName);
+					if (is_callable($callback))
+						call_user_func_array($callback,$processer);
+				}
+				form::$form[$formName]['state'] |= self::PROCESSED;
 			}
 		}
-		$definition['state'] = $state;
-		form::$form[$formName]= $definition;
-		return $state;
+		
+		return form::$form[$formName]['state'];
+	}
+	
+	static function get($view,$formName)
+	{
+		$formName = strtolower($formName);
+
+		if (form::getState($formName)==0)
+			form::load($formName);
+			
+		if (!is_null(form::getHtml($formName)))
+			echo form::getHtml($formName);
+		elseif (is_string($return = $view->select("form/$formName",array('formName'=>$formName))))
+			echo $return;
+		else 
+			echo $view->select('form/form',array('formName'=>$formName));
 	}
 	
 	static function load($formName)
@@ -143,6 +162,17 @@ class form
 		}
 		event::trigger('form',"load:$formName",'after');
 	}
+	
+	static function setHtml($formName,$html)
+	{
+		form::$form[$formName]['html'] = $html;
+	}
+	
+	static function getHtml($formName)
+	{
+		return form::$form[$formName]['html'];
+	}
+	
 	
 	static function getValue($formName,$element)
 	{
@@ -171,22 +201,27 @@ class form
 		return form::$form[$formName]['element'][$element] = $data + form::$form[$formName]['element'][$element];
 	}
 	
-	static function addError($formName,$error)
+	static function addElementError($formName,$element,$error)
 	{
-		form::$form[$formName]['element'][$element]['value'] = $value;
+		form::$form[$formName]['element'][$element]['error'] = $error;
 	}
 	
-	static function get($view,$formName)
+	static function getElementError($formName,$element)
 	{
-		$formName = strtolower($formName);
-
-		if (form::getState($formName)==0)
-			form::load($formName);
+		return form::$form[$formName]['element'][$element]['error'];
+	}
+	
+	static function addError($formName,$error)
+	{
+		form::$form[$formName]['error'][] = $error;
+	}
+	
+	static function getError($formName)
+	{
+		if (isset(form::$form[$formName]['error']))
+			return form::$form[$formName]['error'];
 		
-		if (is_string($return = $view->select("form/$formName",array('formName'=>$formName))))
-			echo $return;
-		else 
-			echo $view->select('form/form',array('formName'=>$formName));
+		return array();
 	}
 	
 	static function getGroupElements($formName,$group = null)
@@ -210,7 +245,6 @@ class form
 				if ($definition['group']==$group)
 					$elements[$element] = $definition;
 		}
-		
 		return $elements;
 	}
 	

@@ -3,7 +3,7 @@ if (!defined('FM_SECURITY')) die();
 
 $form = array(
 	'validator' => array(
-		array('isUser','username','password','loginform:not a user'),
+		array('isLoginable','username','password'),
 	),
 	'element' => array(
 		'username' => array(
@@ -12,8 +12,8 @@ $form = array(
 			'label'    => 'loginform:user',
 			'validator' =>array(
 				array('username'),
-				array('maxLength',10,'loginform:too long'),
-				array('minLength',5,'loginform:too short'),
+				array('maxLength',20),
+				array('minLength',5),
 			),
 		),
 		'password' => array(
@@ -21,8 +21,8 @@ $form = array(
 			'required' => true,
 			'label'    => 'loginform:password',
 			'validator' => array(
-				array('minLength',5,'loginform:too long'),
-				array('maxLength',10,'loginform:too short'),
+				array('maxLength',20),
+				array('minLength',5),
 			)
 		),
 		'submit' => array(

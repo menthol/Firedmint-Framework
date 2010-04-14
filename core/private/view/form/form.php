@@ -2,7 +2,16 @@
 if (!defined('FM_SECURITY')) die();
 ?>
 <div class="form form-<?php show($view->data['formName']); ?>">
-<form action="<?php show($view->data['formAction'],true); ?>" method="post">
+<form action="<?php show(_thisPage(),true); ?>" method="post">
+
+<?php
+if (count($errors = form::getError($view->data['formName']))>0):?>
+<ul class="form-error">
+<?php foreach ($errors as $error): ?>
+	<li><?php show($error); ?></li>
+<?php endforeach; ?>
+</ul>
+<?php endif; ?>
 
 <?php foreach (form::getGroupElements($view->data['formName']) as $element): ?>
 
