@@ -4,7 +4,7 @@ if (!defined('FM_SECURITY')) die();
 class route
 {
 	public  static  $o;
-	public  static  $pageRoute; 
+	public  static  $pageRoute = array(); 
 	
 	static function factory()
 	{

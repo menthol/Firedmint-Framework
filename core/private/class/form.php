@@ -83,6 +83,17 @@ class form
 			return form::$form[$formName]['state'];
 
 		form::$form[$formName] = form::getDefinition($formName);
+		
+		event::trigger('form',"load:$formName",'before');
+		foreach(form::$form[$formName]['loader'] as $loader)
+		{
+			$callback  = array_shift($loader);
+			array_unshift($loader,$formName);
+			if (is_callable($callback))
+				call_user_func_array($callback,$loader);
+		}
+		event::trigger('form',"load:$formName",'after');
+		
 		form::$form[$formName]['state'] = self::LOADED;
 		
 		if (isset($_POST['__formid']) && $_POST['__formid']==base64_encode($formName))
@@ -137,30 +148,15 @@ class form
 	static function get($view,$formName)
 	{
 		$formName = strtolower($formName);
-
-		if (form::getState($formName)==0)
-			form::load($formName);
-			
+		
+		form::getState($formName);
+					
 		if (!is_null(form::getHtml($formName)))
 			echo form::getHtml($formName);
 		elseif (is_string($return = $view->select("form/$formName",array('formName'=>$formName))))
 			echo $return;
 		else 
 			echo $view->select('form/form',array('formName'=>$formName));
-	}
-	
-	static function load($formName)
-	{
-		$formName = strtolower($formName);
-		event::trigger('form',"load:$formName",'before');
-		foreach(form::$form[$formName]['loader'] as $loader)
-		{
-			$callback  = array_shift($loader);
-			array_unshift($loader,$formName);
-			if (is_callable($callback))
-				call_user_func_array($callback,$loader);
-		}
-		event::trigger('form',"load:$formName",'after');
 	}
 	
 	static function setHtml($formName,$html)
